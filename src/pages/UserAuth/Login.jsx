@@ -176,11 +176,19 @@ export default function Login({ onSwitchToSignup }) {
                 </label>
 
                 <button
-                  style={{ fontSize: 13, color: '#e8b84b', fontWeight: 600 }}
-                  onClick={() => showPopup('info', 'Forgot password feature coming soon!')}
-                >
-                  Forgot Password?
-                </button>
+  type="button"
+  onClick={() => navigate("/reset")}
+  style={{
+    fontSize: 13,
+    color: "#e8b84b",
+    fontWeight: 600,
+    background: "transparent",
+    border: "none",
+    cursor: "pointer",
+  }}
+>
+  Forgot Password?
+</button>
               </div>
 
               {/* Login Button */}

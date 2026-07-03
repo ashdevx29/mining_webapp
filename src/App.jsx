@@ -9,7 +9,7 @@ import SplashScreen from './pages/SplashScreen';
 import LoadingScreen from './pages/LoadingScreen';
 import Login from './pages/UserAuth/Login';
 import SignUp from './pages/UserAuth/Signup';
-// import ResetPassword from './pages/UserAuth/ResetPassword';
+import ResetPassword from './pages/UserAuth/ResetPassword';
 import Home from './pages/Home';
 import Mining from './pages/Mining';
 import DailyCheckin from './pages/DailyCheckin';
@@ -54,7 +54,7 @@ function AnimatedRoutes() {
         <Routes location={location}>
           <Route path="/" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
-          {/* <Route path="/reset" element={<ResetPassword />} /> */}
+          <Route path="/reset" element={<ResetPassword />} />
           {/* <Route path="/" element={<Home />} /> */}
           <Route path="/dashboard" element={<Home />} />
           <Route path="/mine" element={<Mining />} />

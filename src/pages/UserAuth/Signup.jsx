@@ -4,6 +4,7 @@ import { Eye, EyeOff, ArrowRight } from 'lucide-react';
 import bgImage from "../../assets/page-bg.png";
 import logo from "../../assets/coin.png";
 import { useNavigate } from "react-router-dom";
+import API from "../../services/api";   // ← API service
 
 const GRADIENT_BORDER = "linear-gradient(135deg,#FFF2A6 0%,#FFD96A 12%,#FFC83D 28%,#F5B300 45%,#D88A00 68%,#8A5200 100%)";
 const CARD_BG = "#0A090A";
@@ -35,7 +36,8 @@ export default function SignUp({ onSwitchToLogin }) {
     setTimeout(() => setPopup({ show: false, type: '', message: '' }), 3000);
   };
 
-  const handleSignUp = () => {
+  // ==================== API CALL ====================
+  const handleSignUp = async () => {
     const { fullName, email, phone, password, confirmPassword } = form;
 
     if (!fullName || !email || !phone || !password || !confirmPassword) {
@@ -52,13 +54,25 @@ export default function SignUp({ onSwitchToLogin }) {
     }
 
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await API.post('/signup', {
+        fullName,
+        email,
+        phone,
+        password
+      });
+
       showPopup('success', `Account created! Login details sent to ${email}`);
+      
+      // Redirect to Login after success
       setTimeout(() => {
-        onSwitchToLogin();
+        navigate('/'); // ya onSwitchToLogin() use kar sakte ho
       }, 1800);
-    }, 1500);
+    } catch (err) {
+      showPopup('error', err.message || 'Failed to create account');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Common Input Style
@@ -188,6 +202,7 @@ export default function SignUp({ onSwitchToLogin }) {
         <motion.button
           whileTap={{ scale: 0.97 }}
           onClick={handleSignUp}
+          disabled={loading}
           style={{
             width: '100%',
             padding: '18px',
@@ -208,20 +223,20 @@ export default function SignUp({ onSwitchToLogin }) {
 
         <div style={{ textAlign: 'center', marginTop: 24 }}>
           <span style={{ color: '#8a7550', fontSize: 14 }}>Already have an account? </span>
-         <button
-  type="button"
-  onClick={() => navigate("/")}
-  style={{
-    color: "#e8b84b",
-    fontWeight: 700,
-    fontSize: 14,
-    background: "transparent",
-    border: "none",
-    cursor: "pointer",
-  }}
->
-  Login
-</button>
+          <button
+            type="button"
+            onClick={() => navigate("/")}
+            style={{
+              color: "#e8b84b",
+              fontWeight: 700,
+              fontSize: 14,
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            Login
+          </button>
         </div>
 
         {/* Popup */}
@@ -278,11 +293,14 @@ export default function SignUp({ onSwitchToLogin }) {
 
 
 
+
+
 // import React, { useState } from 'react';
 // import { motion, AnimatePresence } from 'framer-motion';
 // import { Eye, EyeOff, ArrowRight } from 'lucide-react';
 // import bgImage from "../../assets/page-bg.png";
 // import logo from "../../assets/coin.png";
+// import { useNavigate } from "react-router-dom";
 
 // const GRADIENT_BORDER = "linear-gradient(135deg,#FFF2A6 0%,#FFD96A 12%,#FFC83D 28%,#F5B300 45%,#D88A00 68%,#8A5200 100%)";
 // const CARD_BG = "#0A090A";
@@ -307,6 +325,7 @@ export default function SignUp({ onSwitchToLogin }) {
 //   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 //   const [loading, setLoading] = useState(false);
 //   const [popup, setPopup] = useState({ show: false, type: '', message: '' });
+//   const navigate = useNavigate();
 
 //   const showPopup = (type, message) => {
 //     setPopup({ show: true, type, message });
@@ -334,9 +353,21 @@ export default function SignUp({ onSwitchToLogin }) {
 //       setLoading(false);
 //       showPopup('success', `Account created! Login details sent to ${email}`);
 //       setTimeout(() => {
-//         onSwitchToLogin(); // Go back to Login page
+//         onSwitchToLogin();
 //       }, 1800);
 //     }, 1500);
+//   };
+
+//   // Common Input Style
+//   const inputStyle = {
+//     background: CARD_BG,
+//     borderRadius: 14,
+//     width: '100%',
+//     padding: '16px 20px',
+//     fontSize: 16,
+//     color: '#f3e6c9',
+//     border: 'none',
+//     outline: 'none',
 //   };
 
 //   return (
@@ -357,13 +388,13 @@ export default function SignUp({ onSwitchToLogin }) {
 //       <div className="relative z-10 max-w-[430px] mx-auto min-h-screen flex flex-col justify-center px-6 pb-28">
 
 //         <div style={{ textAlign: 'center', marginBottom: 40 }}>
-//             <div style={{ width: 56, height: 56, marginBottom: 12, margin: '0 auto' }}>
-//                     <img src={logo} alt="Logo" />
-//                   </div>
-//                   <div style={{ ...GRADIENT_TEXT, fontSize: 32, fontWeight: 800 }}>Sign Up</div>
-//           {/* <div style={{ color: '#8a7550', fontSize: 14 }}>Create New Account</div> */}
+//           <div style={{ width: 56, height: 56, marginBottom: 12, margin: '0 auto' }}>
+//             <img src={logo} alt="Logo" />
+//           </div>
+//           <div style={{ ...GRADIENT_TEXT, fontSize: 32, fontWeight: 800 }}>Sign Up</div>
 //         </div>
 
+//         {/* Full Name */}
 //         <div style={{ marginBottom: 24 }}>
 //           <div style={{ fontSize: 12, fontWeight: 700, color: '#8a7550', marginBottom: 8 }}>FULL NAME</div>
 //           <div style={{ padding: "1px", borderRadius: 16, background: GRADIENT_BORDER }}>
@@ -372,18 +403,12 @@ export default function SignUp({ onSwitchToLogin }) {
 //               value={form.fullName}
 //               onChange={(e) => setForm(prev => ({ ...prev, fullName: e.target.value }))}
 //               placeholder="John Doe"
-//               style={{
-//                 background: CARD_BG,
-//                 borderRadius: 14,
-//                 width: '100%',
-//                 padding: '16px 20px',
-//                 fontSize: 16,
-//                 color: '#f3e6c9',
-//               }}
+//               style={inputStyle}
 //             />
 //           </div>
 //         </div>
 
+//         {/* Email */}
 //         <div style={{ marginBottom: 24 }}>
 //           <div style={{ fontSize: 12, fontWeight: 700, color: '#8a7550', marginBottom: 8 }}>EMAIL ADDRESS</div>
 //           <div style={{ padding: "1px", borderRadius: 16, background: GRADIENT_BORDER }}>
@@ -392,18 +417,12 @@ export default function SignUp({ onSwitchToLogin }) {
 //               value={form.email}
 //               onChange={(e) => setForm(prev => ({ ...prev, email: e.target.value }))}
 //               placeholder="your@email.com"
-//               style={{
-//                 background: CARD_BG,
-//                 borderRadius: 14,
-//                 width: '100%',
-//                 padding: '16px 20px',
-//                 fontSize: 16,
-//                 color: '#f3e6c9',
-//               }}
+//               style={inputStyle}
 //             />
 //           </div>
 //         </div>
 
+//         {/* Phone */}
 //         <div style={{ marginBottom: 24 }}>
 //           <div style={{ fontSize: 12, fontWeight: 700, color: '#8a7550', marginBottom: 8 }}>PHONE NUMBER</div>
 //           <div style={{ padding: "1px", borderRadius: 16, background: GRADIENT_BORDER }}>
@@ -412,18 +431,12 @@ export default function SignUp({ onSwitchToLogin }) {
 //               value={form.phone}
 //               onChange={(e) => setForm(prev => ({ ...prev, phone: e.target.value }))}
 //               placeholder="+91 98765 43210"
-//               style={{
-//                 background: CARD_BG,
-//                 borderRadius: 14,
-//                 width: '100%',
-//                 padding: '16px 20px',
-//                 fontSize: 16,
-//                 color: '#f3e6c9',
-//               }}
+//               style={inputStyle}
 //             />
 //           </div>
 //         </div>
 
+//         {/* Password */}
 //         <div style={{ marginBottom: 20 }}>
 //           <div style={{ fontSize: 12, fontWeight: 700, color: '#8a7550', marginBottom: 8 }}>PASSWORD</div>
 //           <div style={{ padding: "1px", borderRadius: 16, background: GRADIENT_BORDER }}>
@@ -433,14 +446,7 @@ export default function SignUp({ onSwitchToLogin }) {
 //                 value={form.password}
 //                 onChange={(e) => setForm(prev => ({ ...prev, password: e.target.value }))}
 //                 placeholder="••••••••"
-//                 style={{
-//                   background: CARD_BG,
-//                   borderRadius: 14,
-//                   width: '100%',
-//                   padding: '16px 20px',
-//                   fontSize: 16,
-//                   color: '#f3e6c9',
-//                 }}
+//                 style={inputStyle}
 //               />
 //               <button
 //                 type="button"
@@ -453,6 +459,7 @@ export default function SignUp({ onSwitchToLogin }) {
 //           </div>
 //         </div>
 
+//         {/* Confirm Password */}
 //         <div style={{ marginBottom: 32 }}>
 //           <div style={{ fontSize: 12, fontWeight: 700, color: '#8a7550', marginBottom: 8 }}>CONFIRM PASSWORD</div>
 //           <div style={{ padding: "1px", borderRadius: 16, background: GRADIENT_BORDER }}>
@@ -462,14 +469,7 @@ export default function SignUp({ onSwitchToLogin }) {
 //                 value={form.confirmPassword}
 //                 onChange={(e) => setForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
 //                 placeholder="••••••••"
-//                 style={{
-//                   background: CARD_BG,
-//                   borderRadius: 14,
-//                   width: '100%',
-//                   padding: '16px 20px',
-//                   fontSize: 16,
-//                   color: '#f3e6c9',
-//                 }}
+//                 style={inputStyle}
 //               />
 //               <button
 //                 type="button"
@@ -505,12 +505,23 @@ export default function SignUp({ onSwitchToLogin }) {
 
 //         <div style={{ textAlign: 'center', marginTop: 24 }}>
 //           <span style={{ color: '#8a7550', fontSize: 14 }}>Already have an account? </span>
-//           <button onClick={onSwitchToLogin} style={{ color: '#e8b84b', fontWeight: 700, fontSize: 14 }}>
-//             Login
-//           </button>
+//          <button
+//   type="button"
+//   onClick={() => navigate("/")}
+//   style={{
+//     color: "#e8b84b",
+//     fontWeight: 700,
+//     fontSize: 14,
+//     background: "transparent",
+//     border: "none",
+//     cursor: "pointer",
+//   }}
+// >
+//   Login
+// </button>
 //         </div>
 
-//         {/* Top-Right Popup */}
+//         {/* Popup */}
 //         <AnimatePresence>
 //           {popup.show && (
 //             <motion.div
@@ -537,10 +548,27 @@ export default function SignUp({ onSwitchToLogin }) {
 //           )}
 //         </AnimatePresence>
 
-//         {/* Bottom Spacer */}
 //         <div style={{ height: 100 }} />
-
 //       </div>
+
+//       {/* === AUTOFILL FIX === */}
+//       <style jsx global>{`
+//         input:-webkit-autofill,
+//         input:-webkit-autofill:hover,
+//         input:-webkit-autofill:focus,
+//         input:-webkit-autofill:active {
+//           -webkit-box-shadow: 0 0 0 30px ${CARD_BG} inset !important;
+//           -webkit-text-fill-color: #f3e6c9 !important;
+//           background: ${CARD_BG} !important;
+//           transition: background-color 5000s ease-in-out 0s !important;
+//         }
+//       `}</style>
 //     </div>
 //   );
 // }
+
+
+
+
+
+

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, ArrowRight, X } from 'lucide-react';
 import bgImage from "../../assets/page-bg.png";
 import logo from "../../assets/coin.png";
+import { useNavigate } from "react-router-dom";
 
 const GRADIENT_BORDER = "linear-gradient(135deg,#FFF2A6 0%,#FFD96A 12%,#FFC83D 28%,#F5B300 45%,#D88A00 68%,#8A5200 100%)";
 const CARD_BG = "#0A090A";
@@ -25,6 +26,7 @@ export default function Login({ onSwitchToSignup }) {
   const [loading, setLoading] = useState(false);
   const [otpTimer, setOtpTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
+  const navigate = useNavigate();
 
   // Popup State
   const [popup, setPopup] = useState({ show: false, type: '', message: '' });
@@ -206,9 +208,19 @@ export default function Login({ onSwitchToSignup }) {
               {/* Sign Up Link */}
               <div style={{ textAlign: 'center', marginTop: 24 }}>
                 <span style={{ color: '#e8b84b', fontSize: 14 }}>Want to create an account? </span>
-                <button onClick={onSwitchToSignup} style={{ color: '#e8b84b', fontWeight: 700, fontSize: 14 }}>
+                {/* <button onClick={onSwitchToSignup} style={{ color: '#e8b84b', fontWeight: 700, fontSize: 14 }}>
                   Sign Up
-                </button>
+                </button> */}
+                <button
+  onClick={() => navigate("/signup")}
+  style={{
+    color: "#e8b84b",
+    fontWeight: 700,
+    fontSize: 14,
+  }}
+>
+  Sign Up
+</button>
               </div>
             </motion.div>
           ) : (

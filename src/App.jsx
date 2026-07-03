@@ -8,7 +8,7 @@ import { AppProvider } from './context/AppContext';
 import SplashScreen from './pages/SplashScreen';
 import LoadingScreen from './pages/LoadingScreen';
 import Login from './pages/UserAuth/Login';
-import SignUp from './pages/UserAuth/SignUp';
+import SignUp from './pages/UserAuth/Signup';
 // import ResetPassword from './pages/UserAuth/ResetPassword';
 import Home from './pages/Home';
 import Mining from './pages/Mining';

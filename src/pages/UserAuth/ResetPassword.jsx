@@ -335,6 +335,7 @@ export default function ResetPassword() {
             </motion.div>
           )}
         </AnimatePresence>
+        
 
         {/* Popup */}
         <AnimatePresence>
@@ -362,6 +363,7 @@ export default function ResetPassword() {
             </motion.div>
           )}
         </AnimatePresence>
+        <div style={{ height: 80 }} />
       </div>
     </div>
   );

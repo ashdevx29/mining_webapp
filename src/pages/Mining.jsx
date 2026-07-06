@@ -49,14 +49,14 @@ export default function Mining() {
   const btnRef = useRef(null);
   let pid = useRef(0);
 
-  const startMining = async () => {
-  try {
-    const res = await API.post('/mining/start');
-    // Update context
-  } catch (err) {
-    alert(err.message);
-  }
-};
+//   const startMining = async () => {
+//   try {
+//     const res = await API.post('/mining/start');
+//     // Update context
+//   } catch (err) {
+//     alert(err.message);
+//   }
+// };
 
   const handleTap = (e) => {
     if (mining.canClaim) {

@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'http://localhost:5000/api/auth', // Change in production
+  // baseURL: 'http://localhost:5000/api/auth', 
+  baseURL: 'https://mining-backend-0mzk.onrender.com/api/auth', 
   headers: {
     'Content-Type': 'application/json',
   },

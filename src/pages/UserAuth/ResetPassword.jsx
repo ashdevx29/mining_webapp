@@ -73,56 +73,118 @@ export default function ResetPassword() {
   };
 
   const handleVerifyOtp = async () => {
-    if (otp.length !== 6) {
-      showPopup('error', 'Please enter valid 6-digit OTP');
-      return;
-    }
+  if (otp.length !== 6) {
+    showPopup('error', 'Please enter valid 6-digit OTP');
+    return;
+  }
 
-    setLoading(true);
-    try {
-      await API.post('/verify-otp', { email, otp }); // Ya aap alag endpoint bhi bana sakte ho
-      setStep('reset');
-      showPopup('success', 'OTP verified successfully');
-    } catch (err) {
-      showPopup('error', err.message || 'Invalid OTP');
-    } finally {
-      setLoading(false);
-    }
-  };
+  setLoading(true);
+  try {
+    await API.post('/verify-otp', { email, otp });
+    
+    setStep('reset');
+    showPopup('success', 'OTP verified successfully');
+    
+    // Note: OTP abhi bhi store mein hai, reset-password use karega
+  } catch (err) {
+    showPopup('error', err.response?.data?.message || 'Invalid OTP');
+  } finally {
+    setLoading(false);
+  }
+};
+
+  // const handleVerifyOtp = async () => {
+  //   if (otp.length !== 6) {
+  //     showPopup('error', 'Please enter valid 6-digit OTP');
+  //     return;
+  //   }
+
+  //   setLoading(true);
+  //   try {
+  //     await API.post('/verify-otp', { email, otp }); // Ya aap alag endpoint bhi bana sakte ho
+  //     setStep('reset');
+  //     showPopup('success', 'OTP verified successfully');
+  //   } catch (err) {
+  //     showPopup('error', err.message || 'Invalid OTP');
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // const handleResetPassword = async () => {
+  //   if (!newPassword || !confirmPassword) {
+  //     showPopup('error', 'Please fill all fields');
+  //     return;
+  //   }
+  //   if (newPassword.length < 6) {
+  //     showPopup('error', 'Password must be at least 6 characters');
+  //     return;
+  //   }
+  //   if (newPassword !== confirmPassword) {
+  //     showPopup('error', 'Passwords do not match');
+  //     return;
+  //   }
+
+  //   setLoading(true);
+  //   try {
+  //     await API.post('/reset-password', {
+  //       email,
+  //       otp,
+  //       newPassword
+  //     });
+
+  //     showPopup('success', 'Password changed successfully! 🎉');
+      
+  //     setTimeout(() => {
+  //       navigate('/'); // Redirect to Login
+  //     }, 1800);
+  //   } catch (err) {
+  //     showPopup('error', err.message || 'Failed to reset password');
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const handleResetPassword = async () => {
-    if (!newPassword || !confirmPassword) {
-      showPopup('error', 'Please fill all fields');
-      return;
-    }
-    if (newPassword.length < 6) {
-      showPopup('error', 'Password must be at least 6 characters');
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      showPopup('error', 'Passwords do not match');
-      return;
-    }
+  if (!newPassword || !confirmPassword) {
+    showPopup('error', 'Please fill all fields');
+    return;
+  }
+  if (newPassword.length < 6) {
+    showPopup('error', 'Password must be at least 6 characters');
+    return;
+  }
+  if (newPassword !== confirmPassword) {
+    showPopup('error', 'Passwords do not match');
+    return;
+  }
 
-    setLoading(true);
-    try {
-      await API.post('/reset-password', {
-        email,
-        otp,
-        newPassword
-      });
+  setLoading(true);
+  try {
+    const payload = {
+      email: email.toLowerCase().trim(),
+      otp: otp.trim(),
+      newPassword
+    };
 
-      showPopup('success', 'Password changed successfully! 🎉');
-      
-      setTimeout(() => {
-        navigate('/'); // Redirect to Login
-      }, 1800);
-    } catch (err) {
-      showPopup('error', err.message || 'Failed to reset password');
-    } finally {
-      setLoading(false);
-    }
-  };
+    console.log("Sending Payload:", payload);   // ← Yeh console mein dekho
+
+    const response = await API.post('/reset-password', payload);
+    
+    console.log("Reset Success Response:", response.data);
+
+    showPopup('success', 'Password changed successfully! 🎉');
+    
+    setTimeout(() => navigate('/'), 1500);
+  } catch (err) {
+    console.error("Full Error:", err);
+    console.error("Error Response:", err.response?.data);
+    
+    showPopup('error', err.response?.data?.message || 'Failed to reset password');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleResendOtp = async () => {
     setLoading(true);

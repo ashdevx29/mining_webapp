@@ -106,7 +106,7 @@ export default function Wallet() {
 
               <div style={{ fontSize: 14, color: '#e8b84b', marginBottom: 8 }}>MINE Balance</div>
               <motion.div
-                key={user.balance}
+                key={user?.balance || 0}
                 initial={{ scale: 1.05 }}
                 animate={{ scale: 1 }}
                 style={{
@@ -115,10 +115,10 @@ export default function Wallet() {
                   marginBottom: 8,
                 }}
               >
-                {formatNumber(user.balance)}
+                {formatNumber(user?.balance || 0)}
               </motion.div>
               <div style={{ color: '#e8b84b', fontSize: 13, marginBottom: 24 }}>
-                ≈ ${(user.balance * 0.001).toFixed(2)} USD
+                ≈ ${((user?.balance || 0) * 0.001).toFixed(2)} USD
               </div>
 
               <div style={{ display: 'flex', gap: 12 }}>
@@ -222,10 +222,10 @@ export default function Wallet() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             {[
-              { label: 'Total Mined', value: formatNumber(user.totalMined), icon: '⛏️' },
-              { label: 'Referral Earnings', value: formatNumber(user.referralEarnings), icon: '👥' },
-              { label: 'Task Rewards', value: formatNumber(575), icon: '📋' },
-              { label: 'Spin Winnings', value: formatNumber(500), icon: '🎰' },
+              { label: 'Total Mined', value: formatNumber(user?.totalMined || 0), icon: '⛏️' },
+              { label: 'Referrals', value: formatNumber(user?.totalReferrals || 0), icon: '👥' },
+              { label: 'Task Rewards', value: formatNumber(0), icon: '📋' },
+              { label: 'Spin Winnings', value: formatNumber(0), icon: '🎰' },
             ].map((s, i) => (
               <div key={i} style={{ padding: "1px", borderRadius: 16, background: GRADIENT_BORDER }}>
                 <div style={{

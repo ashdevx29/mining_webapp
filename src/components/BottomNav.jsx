@@ -179,6 +179,21 @@ export default function BottomNav() {
 
                   {/* Mine Indicator */}
                   {item.path === "/mine" &&
+  mining?.isActive &&
+  !active && (
+    <motion.div
+      animate={{
+        scale: [1, 1.8, 1],
+        opacity: [1, 0, 1],
+      }}
+      transition={{
+        duration: 1.4,
+        repeat: Infinity,
+      }}
+      className="absolute top-2 right-3 w-2 h-2 rounded-full bg-green-400"
+    />
+)}
+                  {/* {item.path === "/mine" &&
                     mining.isActive &&
                     !active && (
                       <motion.div
@@ -192,7 +207,7 @@ export default function BottomNav() {
                         }}
                         className="absolute top-2 right-3 w-2 h-2 rounded-full bg-green-400"
                       />
-                    )}
+                    )} */}
 
                   {/* Icon */}
                   <motion.div

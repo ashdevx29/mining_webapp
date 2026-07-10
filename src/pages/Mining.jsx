@@ -132,7 +132,7 @@ export default function Mining() {
         {/* Balance Display */}
         <div style={{ textAlign: 'center', padding: '20px 24px 0' }}>
           <motion.div
-            key={user.balance}
+            key={user?.balance || 0}
             initial={{ scale: 1.1 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 400 }}
@@ -140,7 +140,7 @@ export default function Mining() {
           >
             <img src={coinImg} alt="" style={{ width: 28, height: 28, objectFit: 'contain', filter: 'drop-shadow(0 0 6px rgba(245,180,60,0.55))' }} />
             <span style={{ fontSize: 34, fontWeight: 800, letterSpacing: '-1px', color: '#e8b84b' }}>
-              {formatNumber(user.balance)}
+              {formatNumber(user?.balance || 0)}
             </span>
             <span style={{ fontSize: 16, fontWeight: 700, ...GRADIENT_TEXT }}>MINE</span>
           </motion.div>
@@ -255,15 +255,15 @@ export default function Mining() {
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
                     <img src={coinImg} alt="" style={{ width: 16, height: 16 }} />
-                    <span style={{ fontSize: 17, fontWeight: 800, color: '#5fd66a' }}>{mining.reward}</span>
+                    <span style={{ fontSize: 17, fontWeight: 800, color: '#5fd66a' }}>{mining.reward || '1+'}</span>
                   </div>
                   <div style={{ fontSize: 11, color: '#e8b84b', marginTop: 4 }}>REWARD</div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: 17, fontWeight: 800, color: '#e8b84b' }}>
-                    {user.level * 25}/hr
+                    1 USDT
                   </div>
-                  <div style={{ fontSize: 11, color: '#e8b84b', marginTop: 4 }}>RATE</div>
+                  <div style={{ fontSize: 11, color: '#e8b84b', marginTop: 4 }}>BASE</div>
                 </div>
               </div>
             </div>

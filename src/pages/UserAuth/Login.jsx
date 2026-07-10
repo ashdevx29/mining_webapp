@@ -4,7 +4,8 @@ import { Eye, EyeOff, ArrowRight } from 'lucide-react';
 import bgImage from "../../assets/page-bg.png";
 import logo from "../../assets/coin.png";
 import { useNavigate } from "react-router-dom";
-import API from "../../services/api";   // ← Yeh file bana lijiye
+import API from "../../services/api";
+import { useApp } from "../../context/AppContext";
 
 const GRADIENT_BORDER = "linear-gradient(135deg,#FFF2A6 0%,#FFD96A 12%,#FFC83D 28%,#F5B300 45%,#D88A00 68%,#8A5200 100%)";
 const CARD_BG = "#0A090A";
@@ -18,6 +19,7 @@ const GRADIENT_TEXT = {
 };
 
 export default function Login({ onSwitchToSignup }) {
+  
   const [step, setStep] = useState('login'); // 'login' | 'otp'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -29,6 +31,8 @@ export default function Login({ onSwitchToSignup }) {
   const [canResend, setCanResend] = useState(false);
   
   const navigate = useNavigate();
+
+  
 
   // Popup State
   const [popup, setPopup] = useState({ show: false, type: '', message: '' });
@@ -73,30 +77,176 @@ export default function Login({ onSwitchToSignup }) {
     }
   };
 
-  const handleVerifyOtp = async () => {
-    if (otp.length !== 6) {
-      showPopup('error', 'Please enter valid 6-digit OTP');
-      return;
-    }
+  const { loadUserData, setUser } = useApp();
 
-    setLoading(true);
-    try {
-      const res = await API.post('/verify-otp', { email, otp });
+  // const handleVerifyOtp = async () => {
+  //   if (otp.length !== 6) {
+  //     showPopup('error', 'Please enter valid 6-digit OTP');
+  //     return;
+  //   }
 
-      // Save token
-      localStorage.setItem('token', res.data.token);
+  //   setLoading(true);
+  //   try {
+  //     const res = await API.post('/verify-otp', { email, otp });
 
-      showPopup('success', 'Login Successful! Welcome back 🎉');
+  //     // Save token
+  //     localStorage.setItem('token', res.data.token);
+  //     API.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
+
+  //     await loadUserData();
+
+  //     showPopup('success', 'Login Successful! Welcome back 🎉');
       
-      setTimeout(() => {
-        window.location.href = '/dashboard';
-      }, 1500);
-    } catch (err) {
-      showPopup('error', err.message || 'Invalid OTP');
-    } finally {
-      setLoading(false);
+  //     setTimeout(async () => {
+  //       // We can get user from /auth/me or it will be populated by loadUserData
+  //       const userRes = await API.get('/auth/me');
+  //       if (userRes.data?.user?.role === 'admin') {
+  //         navigate('/admin');
+  //       } else {
+  //         navigate('/dashboard');
+  //       }
+  //     }, 1500);
+  //   } catch (err) {
+  //     showPopup('error', err.response?.data?.message || err.message || 'Invalid OTP');
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+//   const handleVerifyOtp = async () => {
+//   if (otp.length !== 6) {
+//     showPopup('error', 'Please enter valid 6-digit OTP');
+//     return;
+//   }
+
+//   setLoading(true);
+
+//   try {
+//     const res = await API.post('/verify-otp', { email, otp });
+
+//     if (!res.data.token) {
+//       throw new Error('No token received from server');
+//     }
+
+//     // Save token
+//     localStorage.setItem('token', res.data.token);
+//     API.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
+
+//     // Load user data
+//     await loadUserData();
+
+//     showPopup('success', 'Login Successful! Welcome back 🎉');
+
+//     // Wait for context to update + small delay for UX
+//     setTimeout(() => {
+//       const currentUser = useApp().user;   // Get latest user from context
+
+//       if (currentUser?.role === 'admin') {
+//         navigate('/admin', { replace: true });
+//       } else {
+//         navigate('/dashboard', { replace: true });
+//       }
+//     }, 1300);
+
+//   } catch (err) {
+//     console.error("Login Error:", err);
+//     showPopup('error', 
+//       err.response?.data?.message || 
+//       err.message || 
+//       'Invalid OTP or server error'
+//     );
+//   } finally {
+//     setLoading(false);
+//   }
+// };
+
+const handleVerifyOtp = async () => {
+  if (otp.length !== 6) {
+    showPopup("error", "Please enter valid 6-digit OTP");
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    const res = await API.post("/verify-otp", {
+      email,
+      otp,
+    });
+
+    if (!res.data.token) {
+      throw new Error("No token received");
     }
-  };
+
+    // Save token
+    localStorage.setItem("token", res.data.token);
+    API.defaults.headers.common["Authorization"] = `Bearer ${res.data.token}`;
+
+    // Set user directly from response (no extra /me API call needed)
+    if (res.data.user) {
+      setUser(res.data.user);
+    } else {
+      // Fallback: try loading from /me in background
+      loadUserData().catch(() => {});
+    }
+
+    // Show success message
+    showPopup("success", "Login Successful! Welcome back 🎉");
+
+    // Navigate to dashboard
+    setTimeout(() => {
+      navigate("/dashboard", { replace: true });
+    }, 1000);
+
+  } catch (err) {
+    console.error(err);
+    showPopup(
+      "error",
+      err.response?.data?.message || err.message || "Invalid OTP"
+    );
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+// const handleVerifyOtp = async () => {
+//   if (otp.length !== 6) {
+//     showPopup("error", "Please enter valid 6-digit OTP");
+//     return;
+//   }
+
+//   setLoading(true);
+
+//   try {
+//     const res = await API.post("/verify-otp", {
+//       email,
+//       otp,
+//     });
+
+//     localStorage.setItem("token", res.data.token);
+
+//     API.defaults.headers.common["Authorization"] =
+//       `Bearer ${res.data.token}`;
+
+//     await loadUserData();
+
+//     showPopup("success", "Login Successful!");
+
+//     navigate("/dashboard", {
+//       replace: true,
+//     });
+
+//   } catch (err) {
+//     console.log(err);
+
+//     showPopup(
+//       "error",
+//       err.response?.data?.message || "Invalid OTP"
+//     );
+//   } finally {
+//     setLoading(false);
+//   }
+// };
 
   const handleResendOtp = async () => {
     setLoading(true);

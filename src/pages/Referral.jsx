@@ -34,7 +34,7 @@ const GRADIENT_TEXT = {
 export default function Referral() {
   const { user } = useApp();
   const [copied, setCopied] = useState(false);
-  const refLink = `https://t.me/MineBot?start=${user.referralCode}`;
+  const refLink = `https://t.me/MineBot?start=${user?.referralCode || ''}`;
 
   const handleCopy = async () => {
     await copyToClipboard(refLink);
@@ -109,7 +109,7 @@ export default function Referral() {
 
               <div style={{ display: 'flex', justifyContent: 'space-around' }}>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 26, fontWeight: 800, color: '#f4d99a' }}>{user.referrals}</div>
+                  <div style={{ fontSize: 26, fontWeight: 800, color: '#f4d99a' }}>{user?.totalReferrals || 0}</div>
                   <div style={{ fontSize: 11, color: '#e8b84b', marginTop: 4 }}>FRIENDS INVITED</div>
                 </div>
                 <div style={{ width: 1, background: 'rgba(201,146,47,0.2)' }} />
@@ -117,7 +117,7 @@ export default function Referral() {
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                     <img src={coinImg} alt="" style={{ width: 20, height: 20 }} />
                     <span style={{ fontSize: 26, fontWeight: 800, color: '#5fd66a' }}>
-                      {formatNumber(user.referralEarnings)}
+                      {formatNumber(0)}
                     </span>
                   </div>
                   <div style={{ fontSize: 11, color: '#e8b84b', marginTop: 4 }}>TOTAL EARNED</div>
@@ -189,7 +189,7 @@ export default function Referral() {
             }}>
               <div style={{ fontSize: 12, color: '#e8b84b', marginBottom: 8 }}>Your Referral Code</div>
               <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: 6, color: '#e8b84b' }}>
-                {user.referralCode}
+                {user?.referralCode}
               </div>
             </div>
           </div>

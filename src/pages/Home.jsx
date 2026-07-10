@@ -9,16 +9,15 @@ import bgImage from "../assets/page-bg.png";
 
 const QUICK_STATS = [
   { label: 'Total Mined', key: 'totalMined' },
-  { label: 'Referrals', key: 'referrals' },
-  { label: 'Rank', key: 'rank', prefix: '#' },
-  { label: 'Streak', key: 'dailyStreak', suffix: 'd' },
+  { label: 'Referrals', key: 'totalReferrals' },
+  { label: 'Balance', key: 'balance' },
 ];
 
 const QUICK_ACTIONS = [
   { label: 'Lucky Spin', desc: '3 free spins!', route: '/spin' },
   { label: 'Tasks', desc: 'Earn more coins', route: '/tasks' },
-  { label: 'Invite Friends', desc: '+50 per referral', route: '/referral' },
-  { label: 'Leaderboard', desc: 'You are #142', route: '/leaderboard' },
+  { label: 'Invite Friends', desc: '+1 USDT per referral', route: '/referral' },
+  { label: 'Leaderboard', desc: 'View top miners', route: '/leaderboard' },
 ];
 
 const NEWS_ITEMS = [
@@ -45,8 +44,22 @@ const GRADIENT_TEXT = {
 };
 
 export default function Home() {
-  const { user, mining, unreadCount } = useApp();
+  const { user, mining, unreadCount, loading } = useApp();
   const navigate = useNavigate();
+  const isMiningActive = mining?.isActive ?? false;
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#0a0704', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ width: 60, height: 60, margin: '0 auto 16px', border: '3px solid #e8b84b', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+          <div style={{ color: '#e8b84b', fontWeight: 600 }}>Loading...</div>
+        </div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
 
   return (
     <div
@@ -93,12 +106,12 @@ export default function Home() {
                 fontWeight: 800,
                 color: "#ffffff",
               }}>
-                {user.firstName[0]}
+                {user?.fullName?.[0] || 'U'}
               </div>
             </div>
             <div>
-              <div style={{ fontSize: 17, fontWeight: 600, color: '#f3e6c9' }}>Hey, {user.firstName}! 👋</div>
-              <div style={{ fontSize: 13, color: '#e8b84b', marginTop: 2 }}>Level {user.level} • {user.levelName}</div>
+              <div style={{ fontSize: 17, fontWeight: 600, color: '#f3e6c9' }}>Hey, {user?.fullName || 'Miner'}! 👋</div>
+              <div style={{ fontSize: 13, color: '#e8b84b', marginTop: 2 }}>{user?.email}</div>
             </div>
           </div>
 
@@ -142,24 +155,24 @@ export default function Home() {
                 </div>
                 <div style={{ marginTop: 8, display: 'flex', alignItems: 'baseline', gap: 6 }}>
                   <span style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-1px', color: '#f5d99a' }}>
-                    {formatNumber(user.balance)}
+                    {formatNumber(user?.balance || 0)}
                   </span>
                   <span style={{ fontSize: 15, fontWeight: 700, ...GRADIENT_TEXT }}>MINE</span>
                 </div>
                 <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{
                     display: 'flex', alignItems: 'center', gap: 6,
-                    background: mining.isActive ? '#0f1a10' : '#161208',
-                    border: `1px solid ${mining.isActive ? '#2c5c30' : '#db8f1d'}`,
+                    background: isMiningActive ? '#0f1a10' : '#161208',
+                    border: `1px solid ${isMiningActive ? '#2c5c30' : '#db8f1d'}`,
                     borderRadius: 99, padding: '6px 10px',
                   }}>
                     <span style={{
                       width: 6, height: 6, borderRadius: '50%',
-                      background: mining.isActive ? '#5fd66a' : '#e8b84b',
-                      boxShadow: mining.isActive ? '0 0 8px #5fd66a' : 'none',
+                      background: isMiningActive ? '#5fd66a' : '#e8b84b',
+                      boxShadow: isMiningActive ? '0 0 8px #5fd66a' : 'none',
                     }} />
-                    <span style={{ fontSize: 10, fontWeight: 600, color: mining.isActive ? '#5fd66a' : '#e8b84b' }}>
-                      {mining.isActive ? 'Mining Live' : 'Mining Idle'}
+                    <span style={{ fontSize: 10, fontWeight: 600, color: isMiningActive ? '#5fd66a' : '#e8b84b' }}>
+                      {isMiningActive ? 'Mining Live' : 'Mining Idle'}
                     </span>
                   </div>
                   <div style={{
@@ -169,7 +182,7 @@ export default function Home() {
                   }}>
                     <Zap size={12} color="#e8b84b" fill="#e8b84b" />
                     <span style={{ fontSize: 10, fontWeight: 600, color: '#e8b84b' }}>
-                      {user.level * 25} /hr
+                      1 USDT /hr
                     </span>
                   </div>
                 </div>
@@ -218,7 +231,7 @@ export default function Home() {
                 }}>
                   <img src={coinImg} alt="" style={{ width: 30, height: 30, objectFit: 'contain', filter: 'drop-shadow(0 0 6px rgba(245,180,60,0.55))' }} />
                   <div style={{ fontSize: 16, fontWeight: 700, color: '#ffffff' }}>
-                    {stat.prefix || ''}{formatNumber(user[stat.key])}{stat.suffix || ''}
+                    {stat.prefix || ''}{formatNumber(user?.[stat.key] ?? 0)}{stat.suffix || ''}
                   </div>
                   <div style={{ fontSize: 9, fontWeight: 700, color: '#e8b84b', textTransform: 'uppercase', letterSpacing: 0.8, textAlign: 'center' }}>
                     {stat.label}

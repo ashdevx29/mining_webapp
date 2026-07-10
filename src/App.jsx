@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { AppProvider } from './context/AppContext';
+import { AppProvider, useApp } from './context/AppContext';
 
 
 // Screens
@@ -27,6 +27,8 @@ import FAQ from './pages/FAQ';
 import Support from './pages/Support';
 import Leaderboard from './pages/Leaderboard';
 import Achievements from './pages/Achievements';
+import AdminDashboard from './pages/Admin/AdminDashboard';
+import AdminUsers from './pages/Admin/AdminUsers';
 
 // Components
 import BottomNav from './components/BottomNav';
@@ -73,6 +75,8 @@ function AnimatedRoutes() {
           <Route path="/support" element={<Support />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/achievements" element={<Achievements />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
         </Routes>
       </motion.div>
     </AnimatePresence>
@@ -81,11 +85,12 @@ function AnimatedRoutes() {
 
 function AppShell() {
   const [phase, setPhase] = useState('splash'); // 'splash' | 'loading' | 'app'
+  const { loadingInitial } = useApp();
 
   if (phase === 'splash') {
     return <SplashScreen onDone={() => setPhase('loading')} />;
   }
-  if (phase === 'loading') {
+  if (phase === 'loading' || loadingInitial) {
     return <LoadingScreen onDone={() => setPhase('app')} />;
   }
 

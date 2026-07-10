@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, ArrowRight } from 'lucide-react';
 import bgImage from "../../assets/page-bg.png";
 import logo from "../../assets/coin.png";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import API from "../../services/api";   // ← API service
 
 const GRADIENT_BORDER = "linear-gradient(135deg,#FFF2A6 0%,#FFD96A 12%,#FFC83D 28%,#F5B300 45%,#D88A00 68%,#8A5200 100%)";
@@ -24,7 +24,17 @@ export default function SignUp({ onSwitchToLogin }) {
     phone: '',
     password: '',
     confirmPassword: '',
+    referralCode: '',
   });
+  const [searchParams] = useSearchParams();
+  
+  // Auto-fill referral code from URL
+  React.useEffect(() => {
+    const ref = searchParams.get('ref') || searchParams.get('start');
+    if (ref) {
+      setForm(prev => ({ ...prev, referralCode: ref }));
+    }
+  }, [searchParams]);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -38,7 +48,7 @@ export default function SignUp({ onSwitchToLogin }) {
 
   // ==================== API CALL ====================
   const handleSignUp = async () => {
-    const { fullName, email, phone, password, confirmPassword } = form;
+    const { fullName, email, phone, password, confirmPassword, referralCode } = form;
 
     if (!fullName || !email || !phone || !password || !confirmPassword) {
       showPopup('error', 'Please fill all fields');
@@ -59,7 +69,8 @@ export default function SignUp({ onSwitchToLogin }) {
         fullName,
         email,
         phone,
-        password
+        password,
+        referralCode
       });
 
       showPopup('success', `Account created! Login details sent to ${email}`);
@@ -177,7 +188,7 @@ export default function SignUp({ onSwitchToLogin }) {
         </div>
 
         {/* Confirm Password */}
-        <div style={{ marginBottom: 32 }}>
+        <div style={{ marginBottom: 24 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: '#8a7550', marginBottom: 8 }}>CONFIRM PASSWORD</div>
           <div style={{ padding: "1px", borderRadius: 16, background: GRADIENT_BORDER }}>
             <div style={{ position: 'relative' }}>
@@ -196,6 +207,20 @@ export default function SignUp({ onSwitchToLogin }) {
                 {showConfirmPassword ? <EyeOff size={20} color="#8a7550" /> : <Eye size={20} color="#8a7550" />}
               </button>
             </div>
+          </div>
+        </div>
+
+        {/* Referral Code */}
+        <div style={{ marginBottom: 32 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#8a7550', marginBottom: 8 }}>REFERRAL CODE (OPTIONAL)</div>
+          <div style={{ padding: "1px", borderRadius: 16, background: GRADIENT_BORDER }}>
+            <input
+              type="text"
+              value={form.referralCode}
+              onChange={(e) => setForm(prev => ({ ...prev, referralCode: e.target.value.toUpperCase() }))}
+              placeholder="e.g. REF123"
+              style={inputStyle}
+            />
           </div>
         </div>
 

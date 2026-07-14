@@ -240,7 +240,7 @@ export default function DailyCheckin() {
         </div>
 
         {/* Bottom Spacer */}
-        <div style={{ height: 60 }} />
+        <div style={{ height: 100 }} />
 
       </div>
     </div>

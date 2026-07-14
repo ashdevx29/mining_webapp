@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, ArrowRight } from 'lucide-react';
 import bgImage from "../../assets/page-bg.png";
 import logo from "../../assets/coin.png";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import API from "../../services/api";   // ← API service
+import API from "../../services/api";
 
 const GRADIENT_BORDER = "linear-gradient(135deg,#FFF2A6 0%,#FFD96A 12%,#FFC83D 28%,#F5B300 45%,#D88A00 68%,#8A5200 100%)";
 const CARD_BG = "#0A090A";
@@ -17,7 +17,7 @@ const GRADIENT_TEXT = {
   color: "transparent",
 };
 
-export default function SignUp({ onSwitchToLogin }) {
+export default function SignUp() {
   const [form, setForm] = useState({
     fullName: '',
     email: '',
@@ -26,32 +26,33 @@ export default function SignUp({ onSwitchToLogin }) {
     confirmPassword: '',
     referralCode: '',
   });
+
   const [searchParams] = useSearchParams();
-  
-  // Auto-fill referral code from URL
-  React.useEffect(() => {
-    const ref = searchParams.get('ref') || searchParams.get('start');
-    if (ref) {
-      setForm(prev => ({ ...prev, referralCode: ref }));
-    }
-  }, [searchParams]);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [popup, setPopup] = useState({ show: false, type: '', message: '' });
+
   const navigate = useNavigate();
+
+  // ==================== AUTO FILL REFERRAL FROM URL ====================
+  useEffect(() => {
+    const refCode = searchParams.get('ref') || searchParams.get('start');
+    if (refCode) {
+      setForm(prev => ({ ...prev, referralCode: refCode.toUpperCase() }));
+    }
+  }, [searchParams]);
 
   const showPopup = (type, message) => {
     setPopup({ show: true, type, message });
     setTimeout(() => setPopup({ show: false, type: '', message: '' }), 3000);
   };
 
-  // ==================== API CALL ====================
   const handleSignUp = async () => {
     const { fullName, email, phone, password, confirmPassword, referralCode } = form;
 
     if (!fullName || !email || !phone || !password || !confirmPassword) {
-      showPopup('error', 'Please fill all fields');
+      showPopup('error', 'Please fill all required fields');
       return;
     }
     if (password !== confirmPassword) {
@@ -65,28 +66,28 @@ export default function SignUp({ onSwitchToLogin }) {
 
     setLoading(true);
     try {
-      await API.post('/signup', {
+      const res = await API.post('/auth/signup', {
         fullName,
-        email,
+        email: email.toLowerCase(),
         phone,
         password,
-        referralCode
+        referralCode: referralCode || undefined
       });
 
-      showPopup('success', `Account created! Login details sent to ${email}`);
-      
-      // Redirect to Login after success
+      showPopup('success', `Account created successfully!`);
+
+      // Redirect to Login
       setTimeout(() => {
-        navigate('/'); // ya onSwitchToLogin() use kar sakte ho
+        navigate('/');
       }, 1800);
+
     } catch (err) {
-      showPopup('error', err.message || 'Failed to create account');
+      showPopup('error', err.response?.data?.message || 'Failed to create account');
     } finally {
       setLoading(false);
     }
   };
 
-  // Common Input Style
   const inputStyle = {
     background: CARD_BG,
     borderRadius: 14,
@@ -100,17 +101,7 @@ export default function SignUp({ onSwitchToLogin }) {
 
   return (
     <div className="relative min-h-screen overflow-x-hidden" style={{ background: "transparent" }}>
-      {/* Background */}
-      <div
-        className="fixed inset-0 z-0 pointer-events-none"
-        style={{
-          backgroundImage: `url(${bgImage})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-          opacity: 0.35,
-        }}
-      />
+      <div className="fixed inset-0 z-0 pointer-events-none" style={{ backgroundImage: `url(${bgImage})`, backgroundSize: "cover", opacity: 0.35 }} />
       <div className="fixed inset-0 z-0 bg-black/50 pointer-events-none" />
 
       <div className="relative z-10 max-w-[430px] mx-auto min-h-screen flex flex-col justify-center px-6 pb-28">
@@ -126,13 +117,7 @@ export default function SignUp({ onSwitchToLogin }) {
         <div style={{ marginBottom: 24 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: '#8a7550', marginBottom: 8 }}>FULL NAME</div>
           <div style={{ padding: "1px", borderRadius: 16, background: GRADIENT_BORDER }}>
-            <input
-              type="text"
-              value={form.fullName}
-              onChange={(e) => setForm(prev => ({ ...prev, fullName: e.target.value }))}
-              placeholder="John Doe"
-              style={inputStyle}
-            />
+            <input type="text" value={form.fullName} onChange={(e) => setForm(prev => ({ ...prev, fullName: e.target.value }))} placeholder="John Doe" style={inputStyle} />
           </div>
         </div>
 
@@ -140,13 +125,7 @@ export default function SignUp({ onSwitchToLogin }) {
         <div style={{ marginBottom: 24 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: '#8a7550', marginBottom: 8 }}>EMAIL ADDRESS</div>
           <div style={{ padding: "1px", borderRadius: 16, background: GRADIENT_BORDER }}>
-            <input
-              type="email"
-              value={form.email}
-              onChange={(e) => setForm(prev => ({ ...prev, email: e.target.value }))}
-              placeholder="your@email.com"
-              style={inputStyle}
-            />
+            <input type="email" value={form.email} onChange={(e) => setForm(prev => ({ ...prev, email: e.target.value }))} placeholder="your@email.com" style={inputStyle} />
           </div>
         </div>
 
@@ -154,13 +133,7 @@ export default function SignUp({ onSwitchToLogin }) {
         <div style={{ marginBottom: 24 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: '#8a7550', marginBottom: 8 }}>PHONE NUMBER</div>
           <div style={{ padding: "1px", borderRadius: 16, background: GRADIENT_BORDER }}>
-            <input
-              type="tel"
-              value={form.phone}
-              onChange={(e) => setForm(prev => ({ ...prev, phone: e.target.value }))}
-              placeholder="+91 98765 43210"
-              style={inputStyle}
-            />
+            <input type="tel" value={form.phone} onChange={(e) => setForm(prev => ({ ...prev, phone: e.target.value }))} placeholder="+91 98765 43210" style={inputStyle} />
           </div>
         </div>
 
@@ -169,18 +142,8 @@ export default function SignUp({ onSwitchToLogin }) {
           <div style={{ fontSize: 12, fontWeight: 700, color: '#8a7550', marginBottom: 8 }}>PASSWORD</div>
           <div style={{ padding: "1px", borderRadius: 16, background: GRADIENT_BORDER }}>
             <div style={{ position: 'relative' }}>
-              <input
-                type={showPassword ? "text" : "password"}
-                value={form.password}
-                onChange={(e) => setForm(prev => ({ ...prev, password: e.target.value }))}
-                placeholder="••••••••"
-                style={inputStyle}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)' }}
-              >
+              <input type={showPassword ? "text" : "password"} value={form.password} onChange={(e) => setForm(prev => ({ ...prev, password: e.target.value }))} placeholder="••••••••" style={inputStyle} />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)' }}>
                 {showPassword ? <EyeOff size={20} color="#8a7550" /> : <Eye size={20} color="#8a7550" />}
               </button>
             </div>
@@ -192,25 +155,15 @@ export default function SignUp({ onSwitchToLogin }) {
           <div style={{ fontSize: 12, fontWeight: 700, color: '#8a7550', marginBottom: 8 }}>CONFIRM PASSWORD</div>
           <div style={{ padding: "1px", borderRadius: 16, background: GRADIENT_BORDER }}>
             <div style={{ position: 'relative' }}>
-              <input
-                type={showConfirmPassword ? "text" : "password"}
-                value={form.confirmPassword}
-                onChange={(e) => setForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                placeholder="••••••••"
-                style={inputStyle}
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)' }}
-              >
+              <input type={showConfirmPassword ? "text" : "password"} value={form.confirmPassword} onChange={(e) => setForm(prev => ({ ...prev, confirmPassword: e.target.value }))} placeholder="••••••••" style={inputStyle} />
+              <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)' }}>
                 {showConfirmPassword ? <EyeOff size={20} color="#8a7550" /> : <Eye size={20} color="#8a7550" />}
               </button>
             </div>
           </div>
         </div>
 
-        {/* Referral Code */}
+        {/* Referral Code (Auto-filled) */}
         <div style={{ marginBottom: 32 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: '#8a7550', marginBottom: 8 }}>REFERRAL CODE (OPTIONAL)</div>
           <div style={{ padding: "1px", borderRadius: 16, background: GRADIENT_BORDER }}>
@@ -218,7 +171,7 @@ export default function SignUp({ onSwitchToLogin }) {
               type="text"
               value={form.referralCode}
               onChange={(e) => setForm(prev => ({ ...prev, referralCode: e.target.value.toUpperCase() }))}
-              placeholder="e.g. REF123"
+              placeholder="e.g. ABC123"
               style={inputStyle}
             />
           </div>
@@ -251,14 +204,7 @@ export default function SignUp({ onSwitchToLogin }) {
           <button
             type="button"
             onClick={() => navigate("/")}
-            style={{
-              color: "#e8b84b",
-              fontWeight: 700,
-              fontSize: 14,
-              background: "transparent",
-              border: "none",
-              cursor: "pointer",
-            }}
+            style={{ color: "#e8b84b", fontWeight: 700, fontSize: 14, background: "transparent", border: "none", cursor: "pointer" }}
           >
             Login
           </button>
@@ -294,7 +240,7 @@ export default function SignUp({ onSwitchToLogin }) {
         <div style={{ height: 100 }} />
       </div>
 
-      {/* === AUTOFILL FIX === */}
+      {/* Autofill Fix */}
       <style jsx global>{`
         input:-webkit-autofill,
         input:-webkit-autofill:hover,
@@ -303,7 +249,6 @@ export default function SignUp({ onSwitchToLogin }) {
           -webkit-box-shadow: 0 0 0 30px ${CARD_BG} inset !important;
           -webkit-text-fill-color: #f3e6c9 !important;
           background: ${CARD_BG} !important;
-          transition: background-color 5000s ease-in-out 0s !important;
         }
       `}</style>
     </div>
@@ -318,14 +263,13 @@ export default function SignUp({ onSwitchToLogin }) {
 
 
 
-
-
-// import React, { useState } from 'react';
+// import React, { useState, useEffect } from 'react';
 // import { motion, AnimatePresence } from 'framer-motion';
 // import { Eye, EyeOff, ArrowRight } from 'lucide-react';
 // import bgImage from "../../assets/page-bg.png";
 // import logo from "../../assets/coin.png";
-// import { useNavigate } from "react-router-dom";
+// import { useNavigate, useSearchParams } from "react-router-dom";
+// import API from "../../services/api";
 
 // const GRADIENT_BORDER = "linear-gradient(135deg,#FFF2A6 0%,#FFD96A 12%,#FFC83D 28%,#F5B300 45%,#D88A00 68%,#8A5200 100%)";
 // const CARD_BG = "#0A090A";
@@ -338,30 +282,43 @@ export default function SignUp({ onSwitchToLogin }) {
 //   color: "transparent",
 // };
 
-// export default function SignUp({ onSwitchToLogin }) {
+// export default function SignUp() {
 //   const [form, setForm] = useState({
 //     fullName: '',
 //     email: '',
 //     phone: '',
 //     password: '',
 //     confirmPassword: '',
+//     referralCode: '',
 //   });
+
+//   const [searchParams] = useSearchParams();
 //   const [showPassword, setShowPassword] = useState(false);
 //   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 //   const [loading, setLoading] = useState(false);
 //   const [popup, setPopup] = useState({ show: false, type: '', message: '' });
+
 //   const navigate = useNavigate();
+
+//   // Auto-fill referral code from URL
+//   useEffect(() => {
+//     const ref = searchParams.get('ref') || searchParams.get('start');
+//     if (ref) {
+//       setForm(prev => ({ ...prev, referralCode: ref.toUpperCase() }));
+//     }
+//   }, [searchParams]);
 
 //   const showPopup = (type, message) => {
 //     setPopup({ show: true, type, message });
 //     setTimeout(() => setPopup({ show: false, type: '', message: '' }), 3000);
 //   };
 
-//   const handleSignUp = () => {
-//     const { fullName, email, phone, password, confirmPassword } = form;
+//   // ==================== API CALL ====================
+//   const handleSignUp = async () => {
+//     const { fullName, email, phone, password, confirmPassword, referralCode } = form;
 
 //     if (!fullName || !email || !phone || !password || !confirmPassword) {
-//       showPopup('error', 'Please fill all fields');
+//       showPopup('error', 'Please fill all required fields');
 //       return;
 //     }
 //     if (password !== confirmPassword) {
@@ -374,13 +331,28 @@ export default function SignUp({ onSwitchToLogin }) {
 //     }
 
 //     setLoading(true);
-//     setTimeout(() => {
-//       setLoading(false);
-//       showPopup('success', `Account created! Login details sent to ${email}`);
+//     try {
+//       // ✅ Correct Endpoint
+//       const res = await API.post('/auth/signup', {
+//         fullName,
+//         email,
+//         phone,
+//         password,
+//         referralCode: referralCode || undefined
+//       });
+
+//       showPopup('success', `Account created successfully! Please login.`);
+
+//       // Redirect to Login after success
 //       setTimeout(() => {
-//         onSwitchToLogin();
+//         navigate('/');
 //       }, 1800);
-//     }, 1500);
+
+//     } catch (err) {
+//       showPopup('error', err.response?.data?.message || 'Failed to create account');
+//     } finally {
+//       setLoading(false);
+//     }
 //   };
 
 //   // Common Input Style
@@ -485,7 +457,7 @@ export default function SignUp({ onSwitchToLogin }) {
 //         </div>
 
 //         {/* Confirm Password */}
-//         <div style={{ marginBottom: 32 }}>
+//         <div style={{ marginBottom: 24 }}>
 //           <div style={{ fontSize: 12, fontWeight: 700, color: '#8a7550', marginBottom: 8 }}>CONFIRM PASSWORD</div>
 //           <div style={{ padding: "1px", borderRadius: 16, background: GRADIENT_BORDER }}>
 //             <div style={{ position: 'relative' }}>
@@ -507,9 +479,24 @@ export default function SignUp({ onSwitchToLogin }) {
 //           </div>
 //         </div>
 
+//         {/* Referral Code */}
+//         <div style={{ marginBottom: 32 }}>
+//           <div style={{ fontSize: 12, fontWeight: 700, color: '#8a7550', marginBottom: 8 }}>REFERRAL CODE (OPTIONAL)</div>
+//           <div style={{ padding: "1px", borderRadius: 16, background: GRADIENT_BORDER }}>
+//             <input
+//               type="text"
+//               value={form.referralCode}
+//               onChange={(e) => setForm(prev => ({ ...prev, referralCode: e.target.value.toUpperCase() }))}
+//               placeholder="e.g. REF123"
+//               style={inputStyle}
+//             />
+//           </div>
+//         </div>
+
 //         <motion.button
 //           whileTap={{ scale: 0.97 }}
 //           onClick={handleSignUp}
+//           disabled={loading}
 //           style={{
 //             width: '100%',
 //             padding: '18px',
@@ -530,20 +517,20 @@ export default function SignUp({ onSwitchToLogin }) {
 
 //         <div style={{ textAlign: 'center', marginTop: 24 }}>
 //           <span style={{ color: '#8a7550', fontSize: 14 }}>Already have an account? </span>
-//          <button
-//   type="button"
-//   onClick={() => navigate("/")}
-//   style={{
-//     color: "#e8b84b",
-//     fontWeight: 700,
-//     fontSize: 14,
-//     background: "transparent",
-//     border: "none",
-//     cursor: "pointer",
-//   }}
-// >
-//   Login
-// </button>
+//           <button
+//             type="button"
+//             onClick={() => navigate("/")}
+//             style={{
+//               color: "#e8b84b",
+//               fontWeight: 700,
+//               fontSize: 14,
+//               background: "transparent",
+//               border: "none",
+//               cursor: "pointer",
+//             }}
+//           >
+//             Login
+//           </button>
 //         </div>
 
 //         {/* Popup */}
@@ -576,7 +563,7 @@ export default function SignUp({ onSwitchToLogin }) {
 //         <div style={{ height: 100 }} />
 //       </div>
 
-//       {/* === AUTOFILL FIX === */}
+//       {/* Auto-fill Fix */}
 //       <style jsx global>{`
 //         input:-webkit-autofill,
 //         input:-webkit-autofill:hover,
@@ -585,15 +572,11 @@ export default function SignUp({ onSwitchToLogin }) {
 //           -webkit-box-shadow: 0 0 0 30px ${CARD_BG} inset !important;
 //           -webkit-text-fill-color: #f3e6c9 !important;
 //           background: ${CARD_BG} !important;
-//           transition: background-color 5000s ease-in-out 0s !important;
 //         }
 //       `}</style>
 //     </div>
 //   );
 // }
-
-
-
 
 
 

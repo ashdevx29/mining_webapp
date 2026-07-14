@@ -14,18 +14,33 @@ const QUICK_STATS = [
 ];
 
 const QUICK_ACTIONS = [
-  { label: 'Lucky Spin', desc: '3 free spins!', route: '/spin' },
-  { label: 'Tasks', desc: 'Earn more coins', route: '/tasks' },
+  // { label: 'Lucky Spin', desc: '3 free spins!', route: '/spin' },
+  // { label: 'Tasks', desc: 'Earn more coins', route: '/tasks' },
   { label: 'Invite Friends', desc: '+1 USDT per referral', route: '/referral' },
-  { label: 'Leaderboard', desc: 'View top miners', route: '/leaderboard' },
+  // { label: 'Leaderboard', desc: 'View top miners', route: '/leaderboard' },
 ];
 
 const NEWS_ITEMS = [
-  { id: 1, badge: 'NEW', title: '🎉 Lucky Spin is now available!', desc: 'Try your luck and win up to 5000 MINE.' },
-  { id: 2, badge: 'HOT', title: '💎 Diamond miners get 2x rewards', desc: 'Reach Diamond level this week for bonus rewards.' },
-  { id: 3, badge: 'EVENT', title: '🏆 Weekly Tournament started!', desc: 'Top 10 miners share 50,000 MINE prize pool.' },
+  { 
+    id: 1, 
+    badge: 'REFERRAL',
+    title: '👥 Referral Bonus Activated',
+    desc: 'Add a referral & get 1 USDT extra mining starting from next day!',
+    highlight: true
+  },
+  { 
+    id: 2, 
+    badge: 'HOT', 
+    title: '💎 Diamond miners get 2x rewards', 
+    desc: 'Reach Diamond level this week for bonus rewards.' 
+  },
+  { 
+    id: 3, 
+    badge: 'EVENT', 
+    title: '🏆 Weekly Tournament started!', 
+    desc: 'Top 10 miners share 50,000 MINE prize pool.' 
+  },
 ];
-
 const BADGE_COLORS = {
   NEW: { bg: '#3a2c0d', text: '#e8b84b' },
   HOT: { bg: '#3a140f', text: '#ef6a4c' },
@@ -337,7 +352,7 @@ export default function Home() {
             })}
           </div>
         </div>
-        <div style={{ height: 80 }} /> {/* Spacer for bottom nav */}
+        <div style={{ height: 100 }} /> {/* Spacer for bottom nav */}
 
       </div>
     </div>

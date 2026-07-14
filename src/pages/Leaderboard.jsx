@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { formatNumber } from '../utils/helpers';
 import { Trophy, Zap, Crown } from 'lucide-react';
 import bgImage from "../assets/page-bg.png";
+import { useApp } from '../context/AppContext';
+import API from '../services/api';
 
 const GRADIENT_BORDER = "linear-gradient(135deg,#FFF2A6 0%,#FFD96A 12%,#FFC83D 28%,#F5B300 45%,#D88A00 68%,#8A5200 100%)";
 const CARD_BG = "#0A090A";
@@ -15,223 +17,400 @@ const GRADIENT_TEXT = {
   color: "transparent",
 };
 
-const TOP_MINERS = [
-  { rank: 1, name: 'CryptoKing99', totalMined: 2500000, level: 12, badge: '👑' },
-  { rank: 2, name: 'MineQueen', totalMined: 2100000, level: 11, badge: '🥈' },
-  { rank: 3, name: 'BlockBoss', totalMined: 1850000, level: 10, badge: '🥉' },
-  { rank: 4, name: 'HashMaster', totalMined: 1500000, level: 9, badge: '⚡' },
-  { rank: 5, name: 'CoinLord', totalMined: 1200000, level: 9, badge: '💎' },
-  { rank: 6, name: 'DiamondHands', totalMined: 980000, level: 8, badge: '🔥' },
-  { rank: 7, name: 'MoonMiner', totalMined: 850000, level: 8, badge: '🌙' },
-  { rank: 8, name: 'GoldRush', totalMined: 720000, level: 7, badge: '🏆' },
-  { rank: 9, name: 'StakeBro', totalMined: 600000, level: 7, badge: '⭐' },
-  { rank: 10, name: 'HashHero', totalMined: 500000, level: 6, badge: '🎯' },
-  { rank: 142, name: 'Alex (You)', totalMined: 182500, level: 7, badge: '⛏️', isMe: true },
-];
 
 export default function Leaderboard() {
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [userRank, setUserRank] = useState(null);
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const token = localStorage.getItem('token');
+
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/leaderboard`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          setLeaderboard(data.leaderboard);
+          setUserRank(data.userRank);
+          setUserData(data.userData);
+        }
+      } catch (error) {
+        console.error("Failed to fetch leaderboard");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (token) fetchLeaderboard();
+  }, [token]);
+
   return (
     <div className="relative min-h-screen overflow-x-hidden" style={{ background: "transparent" }}>
-      {/* Background Image */}
-      <div
-        className="fixed inset-0 z-0 pointer-events-none"
-        style={{
-          backgroundImage: `url(${bgImage})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-          opacity: 0.35,
-        }}
-      />
-
-      {/* Dark Overlay */}
+      <div className="fixed inset-0 z-0 pointer-events-none" style={{ backgroundImage: `url(${bgImage})`, backgroundSize: "cover", backgroundPosition: "center", opacity: 0.35 }} />
       <div className="fixed inset-0 z-0 bg-black/45 pointer-events-none" />
 
-      {/* Main Content */}
       <div className="relative z-10 max-w-[430px] mx-auto min-h-screen pb-28">
-
         {/* Header */}
         <div style={{ padding: '32px 24px 0', textAlign: 'center' }}>
           <div style={{ ...GRADIENT_TEXT, fontSize: 24, fontWeight: 700 }}>🏆 Leaderboard</div>
-          <div style={{ fontSize: 13, color: '#e8b84b', marginTop: 6 }}>
-            Top miners this week
-          </div>
+          <div style={{ fontSize: 13, color: '#e8b84b', marginTop: 6 }}>Top miners this week</div>
         </div>
 
-        {/* Top 3 Podium */}
-        <div style={{ padding: '20px 24px 0' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 12 }}>
-            {/* 2nd Place */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              style={{ flex: 1, textAlign: 'center' }}
-            >
-              <div style={{ fontSize: 32, marginBottom: 8 }}>🥈</div>
-              <div style={{
-                width: 54, height: 54, borderRadius: '50%', margin: '0 auto 8px',
-                background: 'linear-gradient(135deg, #9ca3af, #6b7280)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 22, fontWeight: 800, color: '#fff',
-                border: '3px solid rgba(156,163,175,0.5)',
-              }}>
-                {TOP_MINERS[1].name[0]}
-              </div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#9ca3af' }}>
-                {TOP_MINERS[1].name}
-              </div>
-              <div style={{ fontSize: 11, color: '#e8b84b' }}>{formatNumber(TOP_MINERS[1].totalMined)}</div>
-              <div style={{
-                background: CARD_BG, border: '1px solid #9ca3af',
-                borderRadius: '12px 12px 0 0', padding: '10px 0', marginTop: 10,
-                height: 58, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 20, fontWeight: 900, color: '#9ca3af',
-              }}>2</div>
-            </motion.div>
+        {/* Top 3 Podium - Using real data */}
+        {leaderboard.length > 2 && (
+          <div style={{ padding: '20px 24px 0' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 12 }}>
+              {/* 2nd Place */}
+              <motion.div style={{ flex: 1, textAlign: 'center' }}>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>🥈</div>
+                <div style={{ width: 54, height: 54, borderRadius: '50%', margin: '0 auto 8px', background: 'linear-gradient(135deg, #9ca3af, #6b7280)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 800, color: '#fff' }}>
+                  {leaderboard[1]?.name?.[0]}
+                </div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#9ca3af' }}>{leaderboard[1]?.name}</div>
+                <div style={{ fontSize: 11, color: '#e8b84b' }}>{formatNumber(leaderboard[1]?.totalMined)}</div>
+                <div style={{ background: CARD_BG, borderRadius: '12px 12px 0 0', padding: '10px 0', marginTop: 10, height: 58 }}>2</div>
+              </motion.div>
 
-            {/* 1st Place */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0 }}
-              style={{ flex: 1, textAlign: 'center' }}
-            >
-              <motion.div
-                animate={{ scale: [1, 1.08, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                style={{ fontSize: 40, marginBottom: 8 }}
-              >👑</motion.div>
-              <div style={{
-                width: 68, height: 68, borderRadius: '50%', margin: '0 auto 8px',
-                background: GRADIENT_BORDER,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 28, fontWeight: 900, color: '#000',
-                border: '4px solid #e8b84b',
-                boxShadow: '0 0 30px rgba(232,184,75,0.6)',
-              }}>
-                {TOP_MINERS[0].name[0]}
-              </div>
-              <div style={{ fontSize: 13, fontWeight: 800, ...GRADIENT_TEXT }}>
-                {TOP_MINERS[0].name}
-              </div>
-              <div style={{ fontSize: 11, color: '#e8b84b' }}>{formatNumber(TOP_MINERS[0].totalMined)}</div>
-              <div style={{
-                background: CARD_BG, border: '1px solid #e8b84b',
-                borderRadius: '12px 12px 0 0', padding: '12px 0', marginTop: 10,
-                height: 88, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 26, fontWeight: 900, ...GRADIENT_TEXT,
-              }}>1</div>
-            </motion.div>
+              {/* 1st Place */}
+              <motion.div style={{ flex: 1, textAlign: 'center' }}>
+                <motion.div animate={{ scale: [1, 1.08, 1] }} transition={{ duration: 2, repeat: Infinity }} style={{ fontSize: 40, marginBottom: 8 }}>👑</motion.div>
+                <div style={{ width: 68, height: 68, borderRadius: '50%', margin: '0 auto 8px', background: GRADIENT_BORDER, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 900, color: '#000', border: '4px solid #e8b84b' }}>
+                  {leaderboard[0]?.name?.[0]}
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 800, ...GRADIENT_TEXT }}>{leaderboard[0]?.name}</div>
+                <div style={{ fontSize: 11, color: '#e8b84b' }}>{formatNumber(leaderboard[0]?.totalMined)}</div>
+                <div style={{ background: CARD_BG, borderRadius: '12px 12px 0 0', padding: '12px 0', marginTop: 10, height: 88 }}>1</div>
+              </motion.div>
 
-            {/* 3rd Place */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              style={{ flex: 1, textAlign: 'center' }}
-            >
-              <div style={{ fontSize: 32, marginBottom: 8 }}>🥉</div>
-              <div style={{
-                width: 54, height: 54, borderRadius: '50%', margin: '0 auto 8px',
-                background: 'linear-gradient(135deg, #cd7c35, #a16207)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 22, fontWeight: 800, color: '#fff',
-                border: '3px solid rgba(205,124,53,0.5)',
-              }}>
-                {TOP_MINERS[2].name[0]}
-              </div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#cd7c35' }}>
-                {TOP_MINERS[2].name}
-              </div>
-              <div style={{ fontSize: 11, color: '#e8b84b' }}>{formatNumber(TOP_MINERS[2].totalMined)}</div>
-              <div style={{
-                background: CARD_BG, border: '1px solid #cd7c35',
-                borderRadius: '12px 12px 0 0', padding: '10px 0', marginTop: 10,
-                height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 20, fontWeight: 900, color: '#cd7c35',
-              }}>3</div>
-            </motion.div>
-          </div>
-        </div>
-
-        {/* My Rank */}
-        <div style={{ padding: '20px 24px 0' }}>
-          <div style={{ padding: "1px", borderRadius: 18, background: GRADIENT_BORDER }}>
-            <div style={{
-              background: CARD_BG,
-              borderRadius: 16,
-              padding: '16px 20px',
-              display: 'flex', alignItems: 'center', gap: 14,
-            }}>
-              <Trophy size={24} color="#e8b84b" />
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: '#f3e6c9' }}>Your Current Rank</div>
-                <div style={{ fontSize: 12, color: '#e8b84b' }}>Keep mining to climb higher!</div>
-              </div>
-              <div style={{ fontSize: 26, fontWeight: 800, ...GRADIENT_TEXT }}>#142</div>
+              {/* 3rd Place */}
+              <motion.div style={{ flex: 1, textAlign: 'center' }}>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>🥉</div>
+                <div style={{ width: 54, height: 54, borderRadius: '50%', margin: '0 auto 8px', background: 'linear-gradient(135deg, #cd7c35, #a16207)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 800, color: '#fff' }}>
+                  {leaderboard[2]?.name?.[0]}
+                </div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#cd7c35' }}>{leaderboard[2]?.name}</div>
+                <div style={{ fontSize: 11, color: '#e8b84b' }}>{formatNumber(leaderboard[2]?.totalMined)}</div>
+                <div style={{ background: CARD_BG, borderRadius: '12px 12px 0 0', padding: '10px 0', marginTop: 10, height: 52 }}>3</div>
+              </motion.div>
             </div>
           </div>
-        </div>
+        )}
+
+        {/* My Rank */}
+        {userData && (
+          <div style={{ padding: '20px 24px 0' }}>
+            <div style={{ padding: "1px", borderRadius: 18, background: GRADIENT_BORDER }}>
+              <div style={{ background: CARD_BG, borderRadius: 16, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
+                <Trophy size={24} color="#e8b84b" />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#f3e6c9' }}>Your Current Rank</div>
+                  <div style={{ fontSize: 12, color: '#e8b84b' }}>Keep mining to climb higher!</div>
+                </div>
+                <div style={{ fontSize: 26, fontWeight: 800, ...GRADIENT_TEXT }}>#{userRank}</div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Full Leaderboard List */}
         <div style={{ padding: '24px 24px 40px' }}>
           <div style={{ fontSize: 12, fontWeight: 700, ...GRADIENT_TEXT, marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1.2 }}>
             Top Miners
           </div>
-          {TOP_MINERS.map((miner, i) => (
-            <React.Fragment key={miner.rank}>
-              {i === 10 && (
-                <div style={{ textAlign: 'center', padding: '12px 0', color: '#6b5730', fontSize: 14 }}>• • •</div>
-              )}
-              <motion.div
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: Math.min(i, 8) * 0.04 }}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 14,
-                  padding: '14px 16px', marginBottom: 10,
-                  background: miner.isMe ? 'rgba(232,184,75,0.1)' : CARD_BG,
-                  border: miner.isMe ? `1px solid #e8b84b` : '1px solid rgba(58,42,18,0.8)',
-                  borderRadius: 16,
-                }}
-              >
-                <div style={{ width: 32, textAlign: 'center', fontSize: 15, fontWeight: 800, color: miner.rank <= 3 ? '#e8b84b' : '#e8b84b' }}>
-                  #{miner.rank}
+
+          {leaderboard.map((miner, i) => (
+            <motion.div
+              key={miner.rank}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: Math.min(i, 8) * 0.04 }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 14,
+                padding: '14px 16px', marginBottom: 10,
+                background: miner.isMe ? 'rgba(232,184,75,0.1)' : CARD_BG,
+                border: miner.isMe ? `1px solid #e8b84b` : '1px solid rgba(58,42,18,0.8)',
+                borderRadius: 16,
+              }}
+            >
+              <div style={{ width: 32, textAlign: 'center', fontSize: 15, fontWeight: 800, color: '#e8b84b' }}>
+                #{miner.rank}
+              </div>
+              <div style={{
+                width: 40, height: 40, borderRadius: '50%', fontSize: 16, fontWeight: 700,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: miner.isMe ? 'rgba(232,184,75,0.25)' : 'rgba(232,184,75,0.1)',
+                color: miner.isMe ? '#e8b84b' : '#c9b38a',
+              }}>
+                {miner.name[0]}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: miner.isMe ? '#e8b84b' : '#f3e6c9' }}>
+                  {miner.name}
                 </div>
-                <div style={{
-                  width: 40, height: 40, borderRadius: '50%', fontSize: 16, fontWeight: 700,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: miner.isMe ? 'rgba(232,184,75,0.25)' : 'rgba(232,184,75,0.1)',
-                  color: miner.isMe ? '#e8b84b' : '#c9b38a',
-                }}>
-                  {miner.name[0]}
+                <div style={{ fontSize: 11, color: '#e8b84b' }}>Level {miner.level}</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#e8b84b' }}>
+                  {formatNumber(miner.totalMined)}
                 </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: miner.isMe ? '#e8b84b' : '#f3e6c9' }}>
-                    {miner.name}
-                  </div>
-                  <div style={{ fontSize: 11, color: '#e8b84b' }}>Level {miner.level}</div>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: '#e8b84b' }}>
-                    {formatNumber(miner.totalMined)}
-                  </div>
-                  <div style={{ fontSize: 10, color: '#e8b84b' }}>MINE</div>
-                </div>
-                <span style={{ fontSize: 20 }}>{miner.badge}</span>
-              </motion.div>
-            </React.Fragment>
+                <div style={{ fontSize: 10, color: '#e8b84b' }}>MINE</div>
+              </div>
+              <span style={{ fontSize: 20 }}>{miner.badge}</span>
+            </motion.div>
           ))}
         </div>
 
-        {/* Bottom Spacer */}
-        <div style={{ height: 60 }} />
-
+        <div style={{ height: 100 }} />
       </div>
     </div>
   );
 }
+
+
+
+
+
+
+
+// import React from 'react';
+// import { motion } from 'framer-motion';
+// import { formatNumber } from '../utils/helpers';
+// import { Trophy, Zap, Crown } from 'lucide-react';
+// import bgImage from "../assets/page-bg.png";
+
+// const GRADIENT_BORDER = "linear-gradient(135deg,#FFF2A6 0%,#FFD96A 12%,#FFC83D 28%,#F5B300 45%,#D88A00 68%,#8A5200 100%)";
+// const CARD_BG = "#0A090A";
+
+// const GRADIENT_TEXT = {
+//   background: GRADIENT_BORDER,
+//   WebkitBackgroundClip: "text",
+//   WebkitTextFillColor: "transparent",
+//   backgroundClip: "text",
+//   color: "transparent",
+// };
+
+// const TOP_MINERS = [
+//   { rank: 1, name: 'CryptoKing99', totalMined: 2500000, level: 12, badge: '👑' },
+//   { rank: 2, name: 'MineQueen', totalMined: 2100000, level: 11, badge: '🥈' },
+//   { rank: 3, name: 'BlockBoss', totalMined: 1850000, level: 10, badge: '🥉' },
+//   { rank: 4, name: 'HashMaster', totalMined: 1500000, level: 9, badge: '⚡' },
+//   { rank: 5, name: 'CoinLord', totalMined: 1200000, level: 9, badge: '💎' },
+//   { rank: 6, name: 'DiamondHands', totalMined: 980000, level: 8, badge: '🔥' },
+//   { rank: 7, name: 'MoonMiner', totalMined: 850000, level: 8, badge: '🌙' },
+//   { rank: 8, name: 'GoldRush', totalMined: 720000, level: 7, badge: '🏆' },
+//   { rank: 9, name: 'StakeBro', totalMined: 600000, level: 7, badge: '⭐' },
+//   { rank: 10, name: 'HashHero', totalMined: 500000, level: 6, badge: '🎯' },
+//   { rank: 142, name: 'Alex (You)', totalMined: 182500, level: 7, badge: '⛏️', isMe: true },
+// ];
+
+// export default function Leaderboard() {
+//   return (
+//     <div className="relative min-h-screen overflow-x-hidden" style={{ background: "transparent" }}>
+//       {/* Background Image */}
+//       <div
+//         className="fixed inset-0 z-0 pointer-events-none"
+//         style={{
+//           backgroundImage: `url(${bgImage})`,
+//           backgroundSize: "cover",
+//           backgroundPosition: "center",
+//           backgroundRepeat: "no-repeat",
+//           opacity: 0.35,
+//         }}
+//       />
+
+//       {/* Dark Overlay */}
+//       <div className="fixed inset-0 z-0 bg-black/45 pointer-events-none" />
+
+//       {/* Main Content */}
+//       <div className="relative z-10 max-w-[430px] mx-auto min-h-screen pb-28">
+
+//         {/* Header */}
+//         <div style={{ padding: '32px 24px 0', textAlign: 'center' }}>
+//           <div style={{ ...GRADIENT_TEXT, fontSize: 24, fontWeight: 700 }}>🏆 Leaderboard</div>
+//           <div style={{ fontSize: 13, color: '#e8b84b', marginTop: 6 }}>
+//             Top miners this week
+//           </div>
+//         </div>
+
+//         {/* Top 3 Podium */}
+//         <div style={{ padding: '20px 24px 0' }}>
+//           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 12 }}>
+//             {/* 2nd Place */}
+//             <motion.div
+//               initial={{ opacity: 0, y: 30 }}
+//               animate={{ opacity: 1, y: 0 }}
+//               transition={{ delay: 0.1 }}
+//               style={{ flex: 1, textAlign: 'center' }}
+//             >
+//               <div style={{ fontSize: 32, marginBottom: 8 }}>🥈</div>
+//               <div style={{
+//                 width: 54, height: 54, borderRadius: '50%', margin: '0 auto 8px',
+//                 background: 'linear-gradient(135deg, #9ca3af, #6b7280)',
+//                 display: 'flex', alignItems: 'center', justifyContent: 'center',
+//                 fontSize: 22, fontWeight: 800, color: '#fff',
+//                 border: '3px solid rgba(156,163,175,0.5)',
+//               }}>
+//                 {TOP_MINERS[1].name[0]}
+//               </div>
+//               <div style={{ fontSize: 12, fontWeight: 700, color: '#9ca3af' }}>
+//                 {TOP_MINERS[1].name}
+//               </div>
+//               <div style={{ fontSize: 11, color: '#e8b84b' }}>{formatNumber(TOP_MINERS[1].totalMined)}</div>
+//               <div style={{
+//                 background: CARD_BG, border: '1px solid #9ca3af',
+//                 borderRadius: '12px 12px 0 0', padding: '10px 0', marginTop: 10,
+//                 height: 58, display: 'flex', alignItems: 'center', justifyContent: 'center',
+//                 fontSize: 20, fontWeight: 900, color: '#9ca3af',
+//               }}>2</div>
+//             </motion.div>
+
+//             {/* 1st Place */}
+//             <motion.div
+//               initial={{ opacity: 0, y: 30 }}
+//               animate={{ opacity: 1, y: 0 }}
+//               transition={{ delay: 0 }}
+//               style={{ flex: 1, textAlign: 'center' }}
+//             >
+//               <motion.div
+//                 animate={{ scale: [1, 1.08, 1] }}
+//                 transition={{ duration: 2, repeat: Infinity }}
+//                 style={{ fontSize: 40, marginBottom: 8 }}
+//               >👑</motion.div>
+//               <div style={{
+//                 width: 68, height: 68, borderRadius: '50%', margin: '0 auto 8px',
+//                 background: GRADIENT_BORDER,
+//                 display: 'flex', alignItems: 'center', justifyContent: 'center',
+//                 fontSize: 28, fontWeight: 900, color: '#000',
+//                 border: '4px solid #e8b84b',
+//                 boxShadow: '0 0 30px rgba(232,184,75,0.6)',
+//               }}>
+//                 {TOP_MINERS[0].name[0]}
+//               </div>
+//               <div style={{ fontSize: 13, fontWeight: 800, ...GRADIENT_TEXT }}>
+//                 {TOP_MINERS[0].name}
+//               </div>
+//               <div style={{ fontSize: 11, color: '#e8b84b' }}>{formatNumber(TOP_MINERS[0].totalMined)}</div>
+//               <div style={{
+//                 background: CARD_BG, border: '1px solid #e8b84b',
+//                 borderRadius: '12px 12px 0 0', padding: '12px 0', marginTop: 10,
+//                 height: 88, display: 'flex', alignItems: 'center', justifyContent: 'center',
+//                 fontSize: 26, fontWeight: 900, ...GRADIENT_TEXT,
+//               }}>1</div>
+//             </motion.div>
+
+//             {/* 3rd Place */}
+//             <motion.div
+//               initial={{ opacity: 0, y: 30 }}
+//               animate={{ opacity: 1, y: 0 }}
+//               transition={{ delay: 0.2 }}
+//               style={{ flex: 1, textAlign: 'center' }}
+//             >
+//               <div style={{ fontSize: 32, marginBottom: 8 }}>🥉</div>
+//               <div style={{
+//                 width: 54, height: 54, borderRadius: '50%', margin: '0 auto 8px',
+//                 background: 'linear-gradient(135deg, #cd7c35, #a16207)',
+//                 display: 'flex', alignItems: 'center', justifyContent: 'center',
+//                 fontSize: 22, fontWeight: 800, color: '#fff',
+//                 border: '3px solid rgba(205,124,53,0.5)',
+//               }}>
+//                 {TOP_MINERS[2].name[0]}
+//               </div>
+//               <div style={{ fontSize: 12, fontWeight: 700, color: '#cd7c35' }}>
+//                 {TOP_MINERS[2].name}
+//               </div>
+//               <div style={{ fontSize: 11, color: '#e8b84b' }}>{formatNumber(TOP_MINERS[2].totalMined)}</div>
+//               <div style={{
+//                 background: CARD_BG, border: '1px solid #cd7c35',
+//                 borderRadius: '12px 12px 0 0', padding: '10px 0', marginTop: 10,
+//                 height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center',
+//                 fontSize: 20, fontWeight: 900, color: '#cd7c35',
+//               }}>3</div>
+//             </motion.div>
+//           </div>
+//         </div>
+
+//         {/* My Rank */}
+//         <div style={{ padding: '20px 24px 0' }}>
+//           <div style={{ padding: "1px", borderRadius: 18, background: GRADIENT_BORDER }}>
+//             <div style={{
+//               background: CARD_BG,
+//               borderRadius: 16,
+//               padding: '16px 20px',
+//               display: 'flex', alignItems: 'center', gap: 14,
+//             }}>
+//               <Trophy size={24} color="#e8b84b" />
+//               <div style={{ flex: 1 }}>
+//                 <div style={{ fontSize: 14, fontWeight: 600, color: '#f3e6c9' }}>Your Current Rank</div>
+//                 <div style={{ fontSize: 12, color: '#e8b84b' }}>Keep mining to climb higher!</div>
+//               </div>
+//               <div style={{ fontSize: 26, fontWeight: 800, ...GRADIENT_TEXT }}>#142</div>
+//             </div>
+//           </div>
+//         </div>
+
+//         {/* Full Leaderboard List */}
+//         <div style={{ padding: '24px 24px 40px' }}>
+//           <div style={{ fontSize: 12, fontWeight: 700, ...GRADIENT_TEXT, marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1.2 }}>
+//             Top Miners
+//           </div>
+//           {TOP_MINERS.map((miner, i) => (
+//             <React.Fragment key={miner.rank}>
+//               {i === 10 && (
+//                 <div style={{ textAlign: 'center', padding: '12px 0', color: '#6b5730', fontSize: 14 }}>• • •</div>
+//               )}
+//               <motion.div
+//                 initial={{ opacity: 0, x: -10 }}
+//                 animate={{ opacity: 1, x: 0 }}
+//                 transition={{ delay: Math.min(i, 8) * 0.04 }}
+//                 style={{
+//                   display: 'flex', alignItems: 'center', gap: 14,
+//                   padding: '14px 16px', marginBottom: 10,
+//                   background: miner.isMe ? 'rgba(232,184,75,0.1)' : CARD_BG,
+//                   border: miner.isMe ? `1px solid #e8b84b` : '1px solid rgba(58,42,18,0.8)',
+//                   borderRadius: 16,
+//                 }}
+//               >
+//                 <div style={{ width: 32, textAlign: 'center', fontSize: 15, fontWeight: 800, color: miner.rank <= 3 ? '#e8b84b' : '#e8b84b' }}>
+//                   #{miner.rank}
+//                 </div>
+//                 <div style={{
+//                   width: 40, height: 40, borderRadius: '50%', fontSize: 16, fontWeight: 700,
+//                   display: 'flex', alignItems: 'center', justifyContent: 'center',
+//                   background: miner.isMe ? 'rgba(232,184,75,0.25)' : 'rgba(232,184,75,0.1)',
+//                   color: miner.isMe ? '#e8b84b' : '#c9b38a',
+//                 }}>
+//                   {miner.name[0]}
+//                 </div>
+//                 <div style={{ flex: 1 }}>
+//                   <div style={{ fontSize: 14, fontWeight: 600, color: miner.isMe ? '#e8b84b' : '#f3e6c9' }}>
+//                     {miner.name}
+//                   </div>
+//                   <div style={{ fontSize: 11, color: '#e8b84b' }}>Level {miner.level}</div>
+//                 </div>
+//                 <div style={{ textAlign: 'right' }}>
+//                   <div style={{ fontSize: 15, fontWeight: 700, color: '#e8b84b' }}>
+//                     {formatNumber(miner.totalMined)}
+//                   </div>
+//                   <div style={{ fontSize: 10, color: '#e8b84b' }}>MINE</div>
+//                 </div>
+//                 <span style={{ fontSize: 20 }}>{miner.badge}</span>
+//               </motion.div>
+//             </React.Fragment>
+//           ))}
+//         </div>
+
+//         {/* Bottom Spacer */}
+//         <div style={{ height: 100 }} />
+
+//       </div>
+//     </div>
+//   );
+// }
 
 
 

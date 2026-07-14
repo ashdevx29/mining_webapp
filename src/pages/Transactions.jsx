@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useApp } from '../context/AppContext';
 import { formatNumber } from '../utils/helpers';
+import { Loader } from 'lucide-react';
+import API from '../services/api';
 import bgImage from "../assets/page-bg.png";
 
 const GRADIENT_BORDER = "linear-gradient(135deg,#FFF2A6 0%,#FFD96A 12%,#FFC83D 28%,#F5B300 45%,#D88A00 68%,#8A5200 100%)";
@@ -14,46 +17,74 @@ const GRADIENT_TEXT = {
   color: "transparent",
 };
 
-const MOCK_TXS = [
-  { id: 1, type: 'mining', label: 'Mining Reward', amount: 200, time: '2h ago', sign: '+', status: 'completed' },
-  { id: 2, type: 'referral', label: 'Referral Bonus', amount: 50, time: '5h ago', sign: '+', status: 'completed' },
-  { id: 3, type: 'task', label: 'Task: Follow Twitter', amount: 100, time: '1d ago', sign: '+', status: 'completed' },
-  { id: 4, type: 'spin', label: 'Lucky Spin Win', amount: 500, time: '2d ago', sign: '+', status: 'completed' },
-  { id: 5, type: 'withdraw', label: 'Withdrawal to BSC', amount: 1000, time: '3d ago', sign: '-', status: 'completed' },
-  { id: 6, type: 'mining', label: 'Mining Reward', amount: 200, time: '3d ago', sign: '+', status: 'completed' },
-  { id: 7, type: 'checkin', label: 'Daily Check-in Day 5', amount: 300, time: '4d ago', sign: '+', status: 'completed' },
-  { id: 8, type: 'withdraw', label: 'Withdrawal to ETH', amount: 500, time: '5d ago', sign: '-', status: 'pending' },
-  { id: 9, type: 'referral', label: 'Referral Commission', amount: 120, time: '6d ago', sign: '+', status: 'completed' },
-  { id: 10, type: 'mining', label: 'Mining Reward', amount: 200, time: '7d ago', sign: '+', status: 'completed' },
-  { id: 11, type: 'task', label: 'Task: Join Telegram', amount: 200, time: '1w ago', sign: '+', status: 'completed' },
-  { id: 12, type: 'checkin', label: 'Daily Check-in Day 4', amount: 200, time: '1w ago', sign: '+', status: 'completed' },
-];
+const TYPE_ICONS = {
+  mining: '⛏️',
+  referral: '👥',
+  task: '📋',
+  spin: '🎰',
+  withdraw: '💸',
+  checkin: '🔥',
+  debit: '💸',
+  credit: '⛏️'
+};
 
-const TYPE_ICONS = { mining: '⛏️', referral: '👥', task: '📋', spin: '🎰', withdraw: '💸', checkin: '🔥' };
-const TYPE_COLORS = { mining: '#e8b84b', referral: '#5fd66a', task: '#60a5fa', spin: '#c084fc', withdraw: '#ef4444', checkin: '#f43f5e' };
+const TYPE_COLORS = {
+  mining: '#e8b84b',
+  referral: '#5fd66a',
+  task: '#60a5fa',
+  spin: '#c084fc',
+  withdraw: '#ef4444',
+  checkin: '#f43f5e',
+  debit: '#ef4444',
+  credit: '#5fd66a'
+};
 
 export default function Transactions() {
-  const totalIn = MOCK_TXS.filter(t => t.sign === '+').reduce((s, t) => s + t.amount, 0);
-  const totalOut = MOCK_TXS.filter(t => t.sign === '-').reduce((s, t) => s + t.amount, 0);
+  const { user } = useApp();
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const res = await API.get('/wallet/transactions');
+        if (res.data.success) {
+          setTransactions(res.data.transactions || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch transactions:", err);
+        setTransactions([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTransactions();
+  }, []);
+
+  // Calculate Total In & Out
+  const totalIn = transactions
+    .filter(tx => tx.type === 'credit' || tx.sign === '+')
+    .reduce((sum, tx) => sum + Number(tx.amount || 0), 0);
+
+  const totalOut = transactions
+    .filter(tx => tx.type === 'debit' || tx.sign === '-')
+    .reduce((sum, tx) => sum + Number(tx.amount || 0), 0);
 
   return (
     <div className="relative min-h-screen overflow-x-hidden" style={{ background: "transparent" }}>
-      {/* Background Image */}
+      {/* Background */}
       <div
         className="fixed inset-0 z-0 pointer-events-none"
         style={{
           backgroundImage: `url(${bgImage})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
           opacity: 0.35,
         }}
       />
-
-      {/* Dark Overlay */}
       <div className="fixed inset-0 z-0 bg-black/45 pointer-events-none" />
 
-      {/* Main Content */}
       <div className="relative z-10 max-w-[430px] mx-auto min-h-screen pb-28">
 
         {/* Header */}
@@ -73,7 +104,9 @@ export default function Transactions() {
                 textAlign: 'center',
               }}>
                 <div style={{ fontSize: 12, color: '#e8b84b', textTransform: 'uppercase', letterSpacing: 0.8 }}>Total In</div>
-                <div style={{ fontSize: 26, fontWeight: 800, color: '#5fd66a' }}>+{formatNumber(totalIn)}</div>
+                <div style={{ fontSize: 26, fontWeight: 800, color: '#5fd66a' }}>
+                  +{formatNumber(totalIn)}
+                </div>
               </div>
             </div>
 
@@ -85,7 +118,9 @@ export default function Transactions() {
                 textAlign: 'center',
               }}>
                 <div style={{ fontSize: 12, color: '#e8b84b', textTransform: 'uppercase', letterSpacing: 0.8 }}>Total Out</div>
-                <div style={{ fontSize: 26, fontWeight: 800, color: '#ef4444' }}>-{formatNumber(totalOut)}</div>
+                <div style={{ fontSize: 26, fontWeight: 800, color: '#ef4444' }}>
+                  -{formatNumber(totalOut)}
+                </div>
               </div>
             </div>
           </div>
@@ -93,68 +128,247 @@ export default function Transactions() {
 
         {/* Transactions List */}
         <div style={{ padding: '20px 24px 40px' }}>
-          {MOCK_TXS.map((tx, i) => (
-            <motion.div
-              key={tx.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: Math.min(i, 8) * 0.04 }}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 14,
-                padding: '14px 0',
-                borderBottom: '1px solid rgba(58,42,18,0.6)',
-              }}
-            >
-              <div style={{
-                width: 46,
-                height: 46,
-                borderRadius: 14,
-                fontSize: 22,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: `${TYPE_COLORS[tx.type]}15`,
-                flexShrink: 0,
-              }}>
-                {TYPE_ICONS[tx.type]}
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: '#f3e6c9' }}>{tx.label}</div>
-                <div style={{ fontSize: 12, color: '#e8b84b', marginTop: 2 }}>
-                  {tx.time}
-                  {tx.status === 'pending' && (
-                    <span style={{
-                      marginLeft: 8,
-                      fontSize: 10,
-                      fontWeight: 700,
-                      padding: '1px 6px',
-                      borderRadius: 99,
-                      background: 'rgba(245,158,11,0.15)',
-                      color: '#e8b84b',
-                    }}>PENDING</span>
-                  )}
-                </div>
-              </div>
-              <div style={{
-                fontSize: 15,
-                fontWeight: 800,
-                color: tx.sign === '+' ? '#5fd66a' : '#ef4444',
-              }}>
-                {tx.sign}{formatNumber(tx.amount)}
-              </div>
-            </motion.div>
-          ))}
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '80px 20px', color: '#e8b84b' }}>
+              <Loader size={28} className="animate-spin mx-auto mb-4" />
+              Loading transactions...
+            </div>
+          ) : transactions.length > 0 ? (
+            transactions.map((tx, i) => {
+              const type = tx.type || 'mining';
+              const icon = TYPE_ICONS[type] || '📌';
+              const color = TYPE_COLORS[type] || '#e8b84b';
+
+              const isPositive = tx.type === 'credit' || tx.sign === '+';
+
+              return (
+                <motion.div
+                  key={tx._id || i}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: Math.min(i, 8) * 0.04 }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 14,
+                    padding: '14px 0',
+                    borderBottom: '1px solid rgba(58,42,18,0.6)',
+                  }}
+                >
+                  <div style={{
+                    width: 46,
+                    height: 46,
+                    borderRadius: 14,
+                    fontSize: 22,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: `${color}15`,
+                    flexShrink: 0,
+                  }}>
+                    {icon}
+                  </div>
+
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: '#f3e6c9' }}>
+                      {tx.description || tx.label || 'Transaction'}
+                    </div>
+                    <div style={{ fontSize: 12, color: '#e8b84b', marginTop: 2 }}>
+                      {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString() : 'Just now'}
+                      {tx.status === 'pending' && (
+                        <span style={{
+                          marginLeft: 8,
+                          fontSize: 10,
+                          fontWeight: 700,
+                          padding: '1px 6px',
+                          borderRadius: 99,
+                          background: 'rgba(245,158,11,0.15)',
+                          color: '#e8b84b',
+                        }}>PENDING</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div style={{
+                    fontSize: 15,
+                    fontWeight: 800,
+                    color: isPositive ? '#5fd66a' : '#ef4444',
+                  }}>
+                    {isPositive ? '+' : ''}{formatNumber(tx.amount)}
+                  </div>
+                </motion.div>
+              );
+            })
+          ) : (
+            <div style={{ textAlign: 'center', padding: '80px 20px', color: '#6b5730' }}>
+              No transactions yet
+            </div>
+          )}
         </div>
 
-        {/* Bottom Spacer */}
-        <div style={{ height: 60 }} />
-
+        <div style={{ height: 100 }} />
       </div>
     </div>
   );
 }
+
+// import React from 'react';
+// import { motion } from 'framer-motion';
+// import { formatNumber } from '../utils/helpers';
+// import bgImage from "../assets/page-bg.png";
+
+// const GRADIENT_BORDER = "linear-gradient(135deg,#FFF2A6 0%,#FFD96A 12%,#FFC83D 28%,#F5B300 45%,#D88A00 68%,#8A5200 100%)";
+// const CARD_BG = "#0A090A";
+
+// const GRADIENT_TEXT = {
+//   background: GRADIENT_BORDER,
+//   WebkitBackgroundClip: "text",
+//   WebkitTextFillColor: "transparent",
+//   backgroundClip: "text",
+//   color: "transparent",
+// };
+
+// const MOCK_TXS = [
+//   { id: 1, type: 'mining', label: 'Mining Reward', amount: 200, time: '2h ago', sign: '+', status: 'completed' },
+//   { id: 2, type: 'referral', label: 'Referral Bonus', amount: 50, time: '5h ago', sign: '+', status: 'completed' },
+//   { id: 3, type: 'task', label: 'Task: Follow Twitter', amount: 100, time: '1d ago', sign: '+', status: 'completed' },
+//   { id: 4, type: 'spin', label: 'Lucky Spin Win', amount: 500, time: '2d ago', sign: '+', status: 'completed' },
+//   { id: 5, type: 'withdraw', label: 'Withdrawal to BSC', amount: 1000, time: '3d ago', sign: '-', status: 'completed' },
+//   { id: 6, type: 'mining', label: 'Mining Reward', amount: 200, time: '3d ago', sign: '+', status: 'completed' },
+//   { id: 7, type: 'checkin', label: 'Daily Check-in Day 5', amount: 300, time: '4d ago', sign: '+', status: 'completed' },
+//   { id: 8, type: 'withdraw', label: 'Withdrawal to ETH', amount: 500, time: '5d ago', sign: '-', status: 'pending' },
+//   { id: 9, type: 'referral', label: 'Referral Commission', amount: 120, time: '6d ago', sign: '+', status: 'completed' },
+//   { id: 10, type: 'mining', label: 'Mining Reward', amount: 200, time: '7d ago', sign: '+', status: 'completed' },
+//   { id: 11, type: 'task', label: 'Task: Join Telegram', amount: 200, time: '1w ago', sign: '+', status: 'completed' },
+//   { id: 12, type: 'checkin', label: 'Daily Check-in Day 4', amount: 200, time: '1w ago', sign: '+', status: 'completed' },
+// ];
+
+// const TYPE_ICONS = { mining: '⛏️', referral: '👥', task: '📋', spin: '🎰', withdraw: '💸', checkin: '🔥' };
+// const TYPE_COLORS = { mining: '#e8b84b', referral: '#5fd66a', task: '#60a5fa', spin: '#c084fc', withdraw: '#ef4444', checkin: '#f43f5e' };
+
+// export default function Transactions() {
+//   const totalIn = MOCK_TXS.filter(t => t.sign === '+').reduce((s, t) => s + t.amount, 0);
+//   const totalOut = MOCK_TXS.filter(t => t.sign === '-').reduce((s, t) => s + t.amount, 0);
+
+//   return (
+//     <div className="relative min-h-screen overflow-x-hidden" style={{ background: "transparent" }}>
+//       {/* Background Image */}
+//       <div
+//         className="fixed inset-0 z-0 pointer-events-none"
+//         style={{
+//           backgroundImage: `url(${bgImage})`,
+//           backgroundSize: "cover",
+//           backgroundPosition: "center",
+//           backgroundRepeat: "no-repeat",
+//           opacity: 0.35,
+//         }}
+//       />
+
+//       {/* Dark Overlay */}
+//       <div className="fixed inset-0 z-0 bg-black/45 pointer-events-none" />
+
+//       {/* Main Content */}
+//       <div className="relative z-10 max-w-[430px] mx-auto min-h-screen pb-28">
+
+//         {/* Header */}
+//         <div style={{ padding: '32px 24px 0', textAlign: 'center' }}>
+//           <div style={{ ...GRADIENT_TEXT, fontSize: 24, fontWeight: 700 }}>📊 Transactions</div>
+//           <div style={{ fontSize: 13, color: '#e8b84b', marginTop: 6 }}>All your activity</div>
+//         </div>
+
+//         {/* Summary Cards */}
+//         <div style={{ padding: '20px 24px 0' }}>
+//           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+//             <div style={{ padding: "1px", borderRadius: 18, background: GRADIENT_BORDER }}>
+//               <div style={{
+//                 background: CARD_BG,
+//                 borderRadius: 16,
+//                 padding: '18px',
+//                 textAlign: 'center',
+//               }}>
+//                 <div style={{ fontSize: 12, color: '#e8b84b', textTransform: 'uppercase', letterSpacing: 0.8 }}>Total In</div>
+//                 <div style={{ fontSize: 26, fontWeight: 800, color: '#5fd66a' }}>+{formatNumber(totalIn)}</div>
+//               </div>
+//             </div>
+
+//             <div style={{ padding: "1px", borderRadius: 18, background: GRADIENT_BORDER }}>
+//               <div style={{
+//                 background: CARD_BG,
+//                 borderRadius: 16,
+//                 padding: '18px',
+//                 textAlign: 'center',
+//               }}>
+//                 <div style={{ fontSize: 12, color: '#e8b84b', textTransform: 'uppercase', letterSpacing: 0.8 }}>Total Out</div>
+//                 <div style={{ fontSize: 26, fontWeight: 800, color: '#ef4444' }}>-{formatNumber(totalOut)}</div>
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+
+//         {/* Transactions List */}
+//         <div style={{ padding: '20px 24px 40px' }}>
+//           {MOCK_TXS.map((tx, i) => (
+//             <motion.div
+//               key={tx.id}
+//               initial={{ opacity: 0, y: 10 }}
+//               animate={{ opacity: 1, y: 0 }}
+//               transition={{ delay: Math.min(i, 8) * 0.04 }}
+//               style={{
+//                 display: 'flex',
+//                 alignItems: 'center',
+//                 gap: 14,
+//                 padding: '14px 0',
+//                 borderBottom: '1px solid rgba(58,42,18,0.6)',
+//               }}
+//             >
+//               <div style={{
+//                 width: 46,
+//                 height: 46,
+//                 borderRadius: 14,
+//                 fontSize: 22,
+//                 display: 'flex',
+//                 alignItems: 'center',
+//                 justifyContent: 'center',
+//                 background: `${TYPE_COLORS[tx.type]}15`,
+//                 flexShrink: 0,
+//               }}>
+//                 {TYPE_ICONS[tx.type]}
+//               </div>
+//               <div style={{ flex: 1 }}>
+//                 <div style={{ fontSize: 14, fontWeight: 600, color: '#f3e6c9' }}>{tx.label}</div>
+//                 <div style={{ fontSize: 12, color: '#e8b84b', marginTop: 2 }}>
+//                   {tx.time}
+//                   {tx.status === 'pending' && (
+//                     <span style={{
+//                       marginLeft: 8,
+//                       fontSize: 10,
+//                       fontWeight: 700,
+//                       padding: '1px 6px',
+//                       borderRadius: 99,
+//                       background: 'rgba(245,158,11,0.15)',
+//                       color: '#e8b84b',
+//                     }}>PENDING</span>
+//                   )}
+//                 </div>
+//               </div>
+//               <div style={{
+//                 fontSize: 15,
+//                 fontWeight: 800,
+//                 color: tx.sign === '+' ? '#5fd66a' : '#ef4444',
+//               }}>
+//                 {tx.sign}{formatNumber(tx.amount)}
+//               </div>
+//             </motion.div>
+//           ))}
+//         </div>
+
+//         {/* Bottom Spacer */}
+//         <div style={{ height: 100 }} />
+
+//       </div>
+//     </div>
+//   );
+// }
 
 
 

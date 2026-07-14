@@ -5,7 +5,7 @@ export const formatNumber = (num) => {
   return num.toLocaleString();
 };
 
-// Format time from ms: 28800000 -> "8h 00m"
+// Format time from milliseconds
 export const formatTime = (ms) => {
   if (ms <= 0) return '00:00:00';
   const totalSeconds = Math.floor(ms / 1000);
@@ -15,11 +15,17 @@ export const formatTime = (ms) => {
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 };
 
-// Format countdown remaining
+// ✅ Improved Countdown Function
 export const formatCountdown = (startTime, duration) => {
-  if (!startTime) return formatTime(duration);
-  const elapsed = Date.now() - startTime;
+  if (!startTime || !duration) return "08:00:00";
+
+  // Safe parsing of startTime (handles string, Date, or timestamp)
+  const start = new Date(startTime).getTime();
+  if (isNaN(start)) return "08:00:00";
+
+  const elapsed = Date.now() - start;
   const remaining = Math.max(duration - elapsed, 0);
+
   return formatTime(remaining);
 };
 
@@ -42,6 +48,8 @@ export const truncateAddress = (addr) => {
   if (!addr) return '';
   return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
 };
+
+
 
 // Copy to clipboard
 export const copyToClipboard = async (text) => {

@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AppProvider, useApp } from './context/AppContext';
 
-
 // Screens
 import SplashScreen from './pages/SplashScreen';
 import LoadingScreen from './pages/LoadingScreen';
@@ -42,6 +41,8 @@ const pageVariants = {
 
 function AnimatedRoutes() {
   const location = useLocation();
+  const isAuthPage = ['/', '/signup', '/reset'].includes(location.pathname);
+
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -57,7 +58,6 @@ function AnimatedRoutes() {
           <Route path="/" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/reset" element={<ResetPassword />} />
-          {/* <Route path="/" element={<Home />} /> */}
           <Route path="/dashboard" element={<Home />} />
           <Route path="/mine" element={<Mining />} />
           <Route path="/checkin" element={<DailyCheckin />} />
@@ -84,20 +84,23 @@ function AnimatedRoutes() {
 }
 
 function AppShell() {
-  const [phase, setPhase] = useState('splash'); // 'splash' | 'loading' | 'app'
-  const { loadingInitial } = useApp();
+  const [phase, setPhase] = useState('splash');
+  const { loading } = useApp();
+  const location = useLocation();
+  
+  const isAuthPage = ['/', '/signup', '/reset'].includes(location.pathname);
 
   if (phase === 'splash') {
     return <SplashScreen onDone={() => setPhase('loading')} />;
   }
-  if (phase === 'loading' || loadingInitial) {
+  if (phase === 'loading' || loading) {
     return <LoadingScreen onDone={() => setPhase('app')} />;
   }
 
   return (
     <div className="app-shell">
       <AnimatedRoutes />
-      <BottomNav />
+      {!isAuthPage && <BottomNav />}   {/* ← BottomNav sirf non-auth pages par dikhega */}
       <ClaimModal />
     </div>
   );
@@ -112,3 +115,4 @@ export default function App() {
     </BrowserRouter>
   );
 }
+
